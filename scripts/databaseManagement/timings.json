@@ -1,0 +1,286 @@
+{
+    "BUC": {
+        "cosky_db_C3_R1000.db": {
+            "success": true,
+            "duration_seconds": 0.0089
+        },
+        "cosky_db_C3_R5000.db": {
+            "success": true,
+            "duration_seconds": 0.06985
+        },
+        "cosky_db_C3_R10000.db": {
+            "success": true,
+            "duration_seconds": 0.1034
+        },
+        "cosky_db_C3_R50000.db": {
+            "success": true,
+            "duration_seconds": 0.52864
+        },
+        "cosky_db_C3_R100000.db": {
+            "success": true,
+            "duration_seconds": 1.13724
+        },
+        "cosky_db_C3_R1000000.db": {
+            "success": true,
+            "duration_seconds": 11.73956
+        },
+        "cosky_db_C3_R2500000.db": {
+            "success": true,
+            "duration_seconds": 34.38212
+        },
+        "cosky_db_C3_R5000000.db": {
+            "success": true,
+            "duration_seconds": 68.12813
+        },
+        "cosky_db_C3_R10000000.db": {
+            "success": true,
+            "duration_seconds": 123.62884
+        },
+        "cosky_db_C3_R25000000.db": {
+            "success": true,
+            "duration_seconds": 363.32039
+        },
+        "cosky_db_C3_R50000000.db": {
+            "success": true,
+            "duration_seconds": 1179.18306
+        },
+        "cosky_db_C3_R100000000.db": {
+            "success": false,
+            "duration_seconds": null
+        }
+    },
+    "StarCubing": {
+        "cosky_db_C3_R1000.db": {
+            "success": true,
+            "duration_seconds": 0.00881
+        },
+        "cosky_db_C3_R5000.db": {
+            "success": true,
+            "duration_seconds": 0.04386
+        },
+        "cosky_db_C3_R10000.db": {
+            "success": true,
+            "duration_seconds": 0.09129
+        },
+        "cosky_db_C3_R50000.db": {
+            "success": true,
+            "duration_seconds": 0.3883
+        },
+        "cosky_db_C3_R100000.db": {
+            "success": true,
+            "duration_seconds": 0.71059
+        },
+        "cosky_db_C3_R1000000.db": {
+            "success": true,
+            "duration_seconds": 8.34077
+        },
+        "cosky_db_C3_R2500000.db": {
+            "success": true,
+            "duration_seconds": 16.96388
+        },
+        "cosky_db_C3_R5000000.db": {
+            "success": true,
+            "duration_seconds": 35.92156
+        },
+        "cosky_db_C3_R10000000.db": {
+            "success": true,
+            "duration_seconds": 85.82689
+        },
+        "cosky_db_C3_R25000000.db": {
+            "success": true,
+            "duration_seconds": 200.92756
+        },
+        "cosky_db_C3_R50000000.db": {
+            "success": true,
+            "duration_seconds": 468.02607
+        }
+    },
+    "ClosetCube": {
+        "cosky_db_C3_R1000.db": {
+            "success": true,
+            "duration_seconds": 0.01011
+        },
+        "cosky_db_C3_R5000.db": {
+            "success": true,
+            "duration_seconds": 0.05064
+        },
+        "cosky_db_C3_R10000.db": {
+            "success": true,
+            "duration_seconds": 0.11378
+        },
+        "cosky_db_C3_R50000.db": {
+            "success": true,
+            "duration_seconds": 0.5693
+        },
+        "cosky_db_C3_R100000.db": {
+            "success": true,
+            "duration_seconds": 1.27722
+        },
+        "cosky_db_C3_R1000000.db": {
+            "success": true,
+            "duration_seconds": 6.30766
+        },
+        "cosky_db_C3_R2500000.db": {
+            "success": true,
+            "duration_seconds": 16.74085
+        },
+        "cosky_db_C3_R5000000.db": {
+            "success": true,
+            "duration_seconds": 32.88651
+        },
+        "cosky_db_C3_R10000000.db": {
+            "success": true,
+            "duration_seconds": 65.2882
+        },
+        "cosky_db_C3_R25000000.db": {
+            "success": true,
+            "duration_seconds": 196.59322
+        },
+        "cosky_db_C3_R50000000.db": {
+            "success": true,
+            "duration_seconds": 427.87518
+        }
+    },
+    "HierarchicalBUC": {
+        "hierarchie_db_C3_R1000.db": {
+            "success": true,
+            "duration_seconds": 0.18884
+        },
+        "hierarchie_db_C3_R5000.db": {
+            "success": true,
+            "duration_seconds": 0.53654
+        },
+        "hierarchie_db_C3_R10000.db": {
+            "success": true,
+            "duration_seconds": 0.81044
+        },
+        "hierarchie_db_C3_R50000.db": {
+            "success": true,
+            "duration_seconds": 2.68035
+        },
+        "hierarchie_db_C3_R100000.db": {
+            "success": true,
+            "duration_seconds": 4.09009
+        },
+        "hierarchie_db_C3_R1000000.db": {
+            "success": true,
+            "duration_seconds": 20.16265
+        },
+        "hierarchie_db_C3_R2500000.db": {
+            "success": true,
+            "duration_seconds": 47.05019
+        },
+        "hierarchie_db_C3_R5000000.db": {
+            "success": true,
+            "duration_seconds": 93.16167
+        },
+        "hierarchie_db_C3_R10000000.db": {
+            "success": true,
+            "duration_seconds": 191.32115
+        },
+        "hierarchie_db_C3_R25000000.db": {
+            "success": true,
+            "duration_seconds": 479.64351
+        },
+        "hierarchie_db_C3_R50000000.db": {
+            "success": true,
+            "duration_seconds": 1410.57157
+        }
+    },
+    "HierarchicalStarCubing": {
+        "hierarchie_db_C3_R1000.db": {
+            "success": true,
+            "duration_seconds": 0.06068
+        },
+        "hierarchie_db_C3_R5000.db": {
+            "success": true,
+            "duration_seconds": 0.0644
+        },
+        "hierarchie_db_C3_R10000.db": {
+            "success": true,
+            "duration_seconds": 0.1478
+        },
+        "hierarchie_db_C3_R50000.db": {
+            "success": true,
+            "duration_seconds": 0.49795
+        },
+        "hierarchie_db_C3_R100000.db": {
+            "success": true,
+            "duration_seconds": 0.98454
+        },
+        "hierarchie_db_C3_R1000000.db": {
+            "success": true,
+            "duration_seconds": 8.94839
+        },
+        "hierarchie_db_C3_R2500000.db": {
+            "success": true,
+            "duration_seconds": 23.67525
+        },
+        "hierarchie_db_C3_R5000000.db": {
+            "success": true,
+            "duration_seconds": 45.82078
+        },
+        "hierarchie_db_C3_R10000000.db": {
+            "success": true,
+            "duration_seconds": 90.93317
+        },
+        "hierarchie_db_C3_R25000000.db": {
+            "success": true,
+            "duration_seconds": 262.33933
+        },
+        "hierarchie_db_C3_R50000000.db": {
+            "success": true,
+            "duration_seconds": 646.70359
+        },
+        "cosky_db_C3_R100000000.db": {
+            "success": false,
+            "duration_seconds": null
+        }
+    },
+    "HierarchicalClosetCube": {
+        "hierarchie_db_C3_R1000.db": {
+            "success": true,
+            "duration_seconds": 0.44745
+        },
+        "hierarchie_db_C3_R5000.db": {
+            "success": true,
+            "duration_seconds": 0.67454
+        },
+        "hierarchie_db_C3_R10000.db": {
+            "success": true,
+            "duration_seconds": 0.75251
+        },
+        "hierarchie_db_C3_R50000.db": {
+            "success": true,
+            "duration_seconds": 1.14008
+        },
+        "hierarchie_db_C3_R100000.db": {
+            "success": true,
+            "duration_seconds": 1.37246
+        },
+        "hierarchie_db_C3_R1000000.db": {
+            "success": true,
+            "duration_seconds": 9.33283
+        },
+        "hierarchie_db_C3_R2500000.db": {
+            "success": true,
+            "duration_seconds": 23.22263
+        },
+        "hierarchie_db_C3_R5000000.db": {
+            "success": true,
+            "duration_seconds": 44.1406
+        },
+        "hierarchie_db_C3_R10000000.db": {
+            "success": true,
+            "duration_seconds": 87.47076
+        },
+        "hierarchie_db_C3_R25000000.db": {
+            "success": true,
+            "duration_seconds": 245.96881
+        },
+        "hierarchie_db_C3_R50000000.db": {
+            "success": true,
+            "duration_seconds": 571.61962
+        }
+    }
+}

@@ -1,0 +1,49 @@
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\begin{algorithm}[H]
+\caption{BUC (Bottom-Up Computation)}
+\begin{algorithmic}[1]
+\Function{BUC}{data, dims}
+    \If{dims is empty}
+        \State \Return aggregated tuple
+    \EndIf
+    \ForAll{value $v$ in unique values of dims[0]}
+        \State subset $\gets$ rows where dims[0] = $v$
+        \State \Call{BUC}{subset, dims[1:]}
+    \EndFor
+    \State // Process with wildcard
+    \State subset $\gets$ data with dims[0] = *
+    \State \Call{BUC}{subset, dims[1:]}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+\begin{algorithm}[H]
+\caption{Star-Cubing}
+\begin{algorithmic}[1]
+\Function{StarCubing}{data, dims}
+    \State Construct Star-Tree from data
+    \ForAll{level from leaves to root}
+        \ForAll{nodes in current level}
+            \If{node meets threshold}
+                \State generate tuples by generalization
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \Return all valid tuples
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+\begin{algorithm}[H]
+\caption{ClosetCube (Cube Fermé)}
+\begin{algorithmic}[1]
+\Function{ClosetCube}{data, dims}
+    \State candidates $\gets$ all combinations of dims
+    \ForAll{tuple $t$ in candidates}
+        \State aggregate value for $t$
+        \If{no more general tuple $g$ exists with same aggregate}
+            \State output $t$ as a closed tuple
+        \EndIf
+    \EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
