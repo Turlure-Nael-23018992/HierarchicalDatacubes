@@ -919,3 +919,8 @@ class DataGenerator:
         conn.commit()
         conn.close()
         print(f"✅ Base '{db_name}' générée avec {nb_lignes} lignes (sans mesure).")
+
+
+if __name__ == "__main__":
+    dg = DataGenerator()
+    dg.generate_hierarchical_facts_db(10)

@@ -12,6 +12,7 @@ class Converter:
 
         :param databaseFilepath: Path to the SQLite database file.
         """
+        print("databaseFilepath: ", databaseFilepath)
         self.conn = sqlite3.connect(databaseFilepath)
         self.cursor = self.conn.cursor()
         self.tableName = "Pokemon"
@@ -24,6 +25,7 @@ class Converter:
         :return: A dictionary where keys are RowIds and values are tuples of the row's data.
         """
         sqlQuery = "SELECT * FROM " + self.tableName
+        print("sqlQuery: ", sqlQuery)
         self.cursor.execute(sqlQuery)
         rows = self.cursor.fetchall()
         result = {}
@@ -47,4 +49,4 @@ class Converter:
 
 
 if __name__ == "__main__":
-    db = Converter("C:\\Users\\aure8\\Documents\\Cours\\CESI\\A4\\StageRecherche\\git\\HierarchicalDatacubes-Repo\\DB\\cosky_db_C3_R100.db")
+    pass

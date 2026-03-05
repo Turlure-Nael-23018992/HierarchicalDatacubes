@@ -4,19 +4,53 @@ import random
 from collections import defaultdict
 
 class StarCubing:
+    """
+    Star-Cubing Algorithm Implementation.
+
+    Star-Cubing uses a Star-tree structure to compress data, allowing for 
+    efficient hierarchical and non-hierarchical aggregation by merging common prefixes.
+    """
     def __init__(self, data, dimensions, iceberg_threshold=0):
+        """
+        Initialize Star-Cubing.
+
+        Args:
+            data (list): Input data rows.
+            dimensions (list): List of dimension names (the last one is the measure).
+            iceberg_threshold (int): Minimum measure value for a cuboid to be kept.
+        """
         self.dims = dimensions[:-1]
         self.measure = dimensions[-1]
         self.iceberg_threshold = iceberg_threshold
         self.data = data
 
     def _group_by_dim(self, data_rows, dim_idx):
+        """
+        Group data rows based on a specific dimension.
+
+        Args:
+            data_rows (list): Subset of rows to group.
+            dim_idx (int): The index of the dimension column.
+
+        Returns:
+            defaultdict: A mapping from dimension value to list of rows.
+        """
         groups = defaultdict(list)
         for row in data_rows:
             groups[row[dim_idx]].append(row)
         return groups
 
     def _recursive_star_generator(self, data_subset, dim_idx):
+        """
+        Recursive generator that creates star-tree like aggregations.
+
+        Args:
+            data_subset (list): Subset of data to aggregate.
+            dim_idx (int): Current dimension index in the recursion.
+
+        Yields:
+            tuple: (dim_combination, total_measure, count)
+        """
         if dim_idx == len(self.dims):
             total = sum(row[-1] for row in data_subset)
             count = len(data_subset)
@@ -31,10 +65,23 @@ class StarCubing:
             yield ('ALL',) + key_tail, total, count
 
     def run(self, isPrinted=False, write_to_file=False, output_path="output.txt", aggregation: dict = None):
+        """
+        Execute the Star-Cubing algorithm.
+
+        Args:
+            isPrinted (bool): Whether to print results.
+            write_to_file (bool): Whether to save results to a file.
+            output_path (str): Path to the output file.
+            aggregation (dict): Aggregation rules (e.g., {"Measure": "SUM"}).
+
+        Returns:
+            tuple: (results, execution_time)
+        """
         start_time = time.perf_counter()
         measure_name = self.measure
         agg = (aggregation or {}).get(measure_name, "SUM").upper()
         generated_tuples = 0
+        results = []
 
         for key, total, count in self._recursive_star_generator(self.data, 0):
             if agg == "SUM":
@@ -47,11 +94,15 @@ class StarCubing:
                 continue
             if value < self.iceberg_threshold:
                 continue
+            
+            row_dict = dict(zip(self.dims, key))
+            row_dict[measure_name] = value
+            results.append(row_dict)
             generated_tuples += 1
 
         end_time = time.perf_counter()
-        print(f"\n\u23f1 Durée d'exécution StarCubing : {end_time - start_time:.5f} secondes (lignes traitées : {len(self.data)}, tuples générés : {generated_tuples})")
-        return None, end_time - start_time
+        print(f"\nDurée d'exécution StarCubing : {end_time - start_time:.5f} secondes (lignes traitées : {len(self.data)}, tuples générés : {generated_tuples})")
+        return results, end_time - start_time
 
 
     def export_star_tree_like_structure(self,

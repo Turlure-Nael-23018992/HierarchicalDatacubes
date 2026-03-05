@@ -6,7 +6,21 @@ from tabulate import tabulate
 from itertools import product
 
 class BUC:
+    """
+    Bottom-Up Cubing (BUC) Algorithm Implementation.
+
+    BUC is a recursive algorithm that computes a data cube by partitioning data 
+    from the most detailed level up to the total aggregation.
+    This implementation uses a flat permutation approach for lightweight processing.
+    """
     def __init__(self, db_path, iceberg_threshold=1):
+        """
+        Initialize the BUC algorithm.
+
+        Args:
+            db_path (str): Path to the SQLite database.
+            iceberg_threshold (int): Minimum value for an aggregate to be included (Iceberg Cube).
+        """
         self.db_path = db_path
         self.iceberg_threshold = iceberg_threshold
         self.dim_names = []
@@ -16,6 +30,15 @@ class BUC:
         self.last_tuple_count = 0
 
     def run(self, isPrinted=False):
+        """
+        Execute the BUC algorithm.
+
+        Args:
+            isPrinted (bool): Whether to print the resulting cube to the console.
+
+        Returns:
+            tuple: (None, execution_time_in_seconds)
+        """
         start_time = time.perf_counter()
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -35,13 +58,25 @@ class BUC:
 
         cursor.execute(f"SELECT COUNT(*) FROM Pokemon")
         total_rows = cursor.fetchone()[0]
-        elapsed = self.run_lightweight(filtered_columns)
+        accum, elapsed = self.run_lightweight(filtered_columns)
+
+        if isPrinted:
+            self._print_results(accum)
 
         conn.close()
-        print(f"\n⏱ Durée d'exécution BUC : {elapsed:.5f} secondes (lignes traitées : {self.row_count}, tuples générés : {self.last_tuple_count})")
-        return None, elapsed
+        print(f"\nDurée d'exécution BUC : {elapsed:.5f} secondes (lignes traitées : {self.row_count}, tuples générés : {self.last_tuple_count})")
+        return accum, elapsed
 
     def run_lightweight(self, filtered_columns):
+        """
+        Process the database rows using a memory-efficient generator approach.
+
+        Args:
+            filtered_columns (list): Names of dimension and measure columns.
+
+        Returns:
+            float: Elapsed time for the computation.
+        """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         col_str = ", ".join(filtered_columns)
@@ -71,15 +106,29 @@ class BUC:
 
         conn.close()
         self.last_tuple_count = tuple_count
-        return time.perf_counter() - start_time
+        return accum, time.perf_counter() - start_time
 
 
     def _update_aggregates(self, accumulators, dims, measure):
+        """
+        Update the aggregate counts for all possible masks of a given data row.
+
+        Args:
+            accumulators (dict): The mapping of dimension tuples to measure sums.
+            dims (tuple): Dimension values of the current row.
+            measure (float): Measure value of the current row.
+        """
         for mask in product((True, False), repeat=len(dims)):
             key = tuple(dim if use else "ALL" for dim, use in zip(dims, mask))
             accumulators[key] += measure
 
     def _print_results(self, accumulators):
+        """
+        Print the final data cube in a grid format.
+
+        Args:
+            accumulators (dict): The final mapping of all cuboids.
+        """
         if self.row_count > 100:
             print(f"⚠️ Impression désactivée automatiquement : la base contient {self.row_count} lignes (> 100)")
             return

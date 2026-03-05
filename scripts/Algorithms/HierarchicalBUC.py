@@ -8,6 +8,12 @@ import re
 
 
 class HierarchicalBUC:
+    """
+    Hierarchical Bottom-Up Cubing Algorithm.
+
+    This algorithm extends BUC to handle hierarchical dimensions (e.g., Country > City).
+    It respects hierarchical paths to avoid calculating invalid combinations.
+    """
     # Hiérarchie statique intégrée à la classe
     STATIC_HIERARCHY = {
         "Geography": {
@@ -69,6 +75,14 @@ class HierarchicalBUC:
     }
 
     def run_buc_from_simple_hierarchical_db(self, db_path, table_name="Pokemon", isPrinted=False):
+        """
+        Load data from a SQLite DB and run the hierarchical BUC algorithm.
+
+        Args:
+            db_path (str): Path to the SQLite database.
+            table_name (str): Name of the table to process.
+            isPrinted (bool): If True, prints the resulting cube.
+        """
         start = time.time()
 
         # Lecture DB
@@ -97,11 +111,25 @@ class HierarchicalBUC:
 
         elapsed = time.time() - start
         print(
-            f"\n⏱ Durée d'exécution BUC hiérarchique : {elapsed:.5f} secondes "
+            f"\nDurée d'exécution BUC hiérarchique : {elapsed:.5f} secondes "
             f"(lignes traitées : {self.row_count}, tuples générés : {self.last_tuple_count})"
         )
+        return results
 
     def _run_flat_buc(self, data_dict, dimensions, aggregation, hierarchy, isPrinted=True):
+        """
+        Core logic for processing hierarchical BUC calculations on a dataset.
+
+        Args:
+            data_dict (dict): Input data rows.
+            dimensions (list): Column names.
+            aggregation (dict): Aggregation functions for measures.
+            hierarchy (dict): Hierarchical relationships.
+            isPrinted (bool): If True, output results to terminal.
+
+        Returns:
+            dict: Grouped cuboids by their pattern.
+        """
         data = list(data_dict.values())
         measure_names = list(aggregation.keys())
         dim_names = [d for d in dimensions if d not in measure_names]
@@ -138,6 +166,14 @@ class HierarchicalBUC:
         return results_by_pattern
 
     def _print_results(self, results, dim_names, measure_names):
+        """
+        Perform complex sorting and printing of the hierarchical data cube results.
+
+        Args:
+            results (dict): Pattern-grouped results.
+            dim_names (list): Dimension column names.
+            measure_names (list): Measure column names.
+        """
         def get_sort_key(val):
             if isinstance(val, str) and val.startswith("ALL"):
                 return (1e9,)

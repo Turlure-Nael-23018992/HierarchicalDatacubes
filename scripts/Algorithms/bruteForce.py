@@ -8,6 +8,15 @@ def powerset(iterable):
 
 
 def bruteForce(datas):
+    """
+    Baseline Brute Force Cubing Algorithm.
+
+    Calculates every possible combination of dimensions (power set) and 
+    performs a GROUP BY for each. Used for performance comparison only.
+
+    Args:
+        datas (DataFrame): Input data containing dimensions and measures.
+    """
 
     # Lancement du chrono
     start_time = time.time()

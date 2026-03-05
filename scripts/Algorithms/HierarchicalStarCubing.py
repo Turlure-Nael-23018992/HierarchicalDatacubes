@@ -8,7 +8,22 @@ import pandas as pd
 
 
 class HierarchicalStarCubing:
+    """
+    Hierarchical Star-Cubing Algorithm.
+
+    Extends Star-Cubing to support hierarchical dimensions by filtering out 
+    invalid generalizations based on a parent-child mapping.
+    """
     def __init__(self, data_dict, dimensions, aggregation, hierarchy):
+        """
+        Initialize Hierarchical Star-Cubing.
+
+        Args:
+            data_dict (dict): Input data rows.
+            dimensions (list): All column names.
+            aggregation (dict): Aggregation rules.
+            hierarchy (dict): Child-Parent mapping for dimensions.
+        """
         self.data = list(data_dict.values())
         self.dim_cols = [d for d in dimensions if d not in aggregation]
         self.measure_cols = list(aggregation.keys())
@@ -23,6 +38,16 @@ class HierarchicalStarCubing:
         self.dim_to_idx = {dim: i for i, dim in enumerate(self.dim_cols)}
 
     def _is_generalization_valid(self, key):
+        """
+        Check if a hierarchical generalization is valid.
+        (A parent cannot be ALL if its child is not ALL).
+
+        Args:
+            key (tuple): A combination of dimension values/ALL.
+
+        Returns:
+            bool: True if valid, False otherwise.
+        """
         for child, parent in self.hierarchy.items():
             if parent:
                 child_idx = self.dim_to_idx[child]
@@ -32,11 +57,29 @@ class HierarchicalStarCubing:
         return True
 
     def _generate_generalizations(self, row):
+        """
+        Generate all valid hierarchical generalizations for a single data row.
+
+        Args:
+            row (list): The original dimension values.
+
+        Returns:
+            list: List of valid generalized tuples.
+        """
         options = [[val, "ALL"] for val in row]
         all_combinations = product(*options)
         return [combo for combo in all_combinations if self._is_generalization_valid(combo)]
 
     def _aggregate_measures(self, rows):
+        """
+        Calculate aggregates for a group of rows based on the aggregation rules.
+
+        Args:
+            rows (list): List of measure values to aggregate.
+
+        Returns:
+            dict: Aggregated results map.
+        """
         result = {}
         for i, name in enumerate(self.measure_cols):
             col = [r[i] for r in rows]
@@ -54,6 +97,15 @@ class HierarchicalStarCubing:
         return result
 
     def run_star_cubing_with_hierarchy(self, isPrinted=True):
+        """
+        Execute Star-Cubing while respecting the hierarchical dependencies.
+
+        Args:
+            isPrinted (bool): If True, prints a table of the results.
+
+        Returns:
+            list: A list of result dictionaries representing the datacube.
+        """
         start = time.perf_counter()
         agg_dict = defaultdict(list)
         for row in self.data:
@@ -101,7 +153,7 @@ class HierarchicalStarCubing:
             for lvl in sorted(results_by_level):
                 print_block(results_by_level[lvl])
 
-        print(f"\n⏱ Durée d'exécution Hierarchical StarCubing 2: {time.perf_counter() - start:.5f} sec")
+        print(f"\nDurée d'exécution Hierarchical StarCubing 2: {time.perf_counter() - start:.5f} sec")
         return results_by_level
 
     def _sort_key(self, val):
@@ -132,7 +184,7 @@ class HierarchicalStarCubing:
 
         hierarchy = {
             "Geography": {
-                # Super-catégorie
+                "ALL": ["Europe", "Amérique", "Asie"],
                 "Europe": ["France", "Allemagne", "Espagne", "Italie", "Belgique"],
 
                 # Pays → Régions
@@ -156,7 +208,7 @@ class HierarchicalStarCubing:
             },
 
             "Time": {
-                # Année → Mois
+                "ALL": ["2021", "2022", "2023", "2024"],
                 "2021": ["2021-12", "2021-05"],
                 "2022": ["2022-01", "2022-12", "2022-07", "2022-04"],
                 "2023": ["2023-01", "2023-02", "2023-07", "2023-08", "2023-12", "2023-05", "2023-11"],
@@ -182,7 +234,7 @@ class HierarchicalStarCubing:
             },
 
             "Food": {
-                # Catégorie → Type
+                "ALL": ["Fruits", "Légumes", "Viandes", "Produits laitiers", "Céréales"],
                 "Fruits": ["Fruits rouges", "Agrumes"],
                 "Légumes": ["Légumes verts", "Tubercules"],
                 "Viandes": ["Viandes rouges", "Poissons"],
@@ -203,17 +255,15 @@ class HierarchicalStarCubing:
         }
 
         # Lancement du cube
-        cube = HierarchicalStarCubing(
+        hsc = HierarchicalStarCubing(
             {i: row for i, row in enumerate(data)},
             dimensions=dim_cols + measure_cols,
             aggregation={"COUNT": "SUM"},
             hierarchy=hierarchy
         )
-
-        cube.run_star_cubing_with_hierarchy(isPrinted=isPrinted)
+        results = hsc.run_star_cubing_with_hierarchy(isPrinted=isPrinted)
 
         elapsed = time.perf_counter() - start
-        # print(f"\n⏱ Durée d'exécution HierarchicalStarCubing : {elapsed:.5f} secondes (lignes traitées : {len(data)})")
-        print(f"\n⏱ Durée d'exécution HierarchicalStarCubing : {elapsed:.5f} secondes.")
+        print(f"\nDurée d'exécution HierarchicalStarCubing : {elapsed:.5f} secondes.")
 
-        return {"success": True, "duration_seconds": round(elapsed, 5)}
+        return results
