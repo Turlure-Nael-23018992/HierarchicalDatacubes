@@ -1,13 +1,12 @@
 import itertools
 from collections import defaultdict
 import time
-import numpy as np
+
 
 class FastHierarchicalClosetCube:
     """
     Optimized Hierarchical ClosetCube Algorithm.
     """
-
     STATIC_HIERARCHY = {
         "Geography": {
             "Europe": ["France", "Allemagne", "Espagne", "Italie", "Belgique"],
@@ -81,11 +80,7 @@ class FastHierarchicalClosetCube:
 
         self._inv_maps = {}
         for dim_name in self.dim_cols:
-            self._inv_maps[dim_name] = {
-                v: k
-                for k, vs in self.hierarchy.get(dim_name, {}).items()
-                for v in vs
-            }
+            self._inv_maps[dim_name] = {v: k for k, vs in self.hierarchy.get(dim_name, {}).items() for v in vs}
 
         self._ancestors_cache = {}
         self._generalizations_cache = {}
@@ -98,7 +93,6 @@ class FastHierarchicalClosetCube:
         ancestors = []
         inv_map = self._inv_maps.get(dim_name, {})
         current = val
-
         while current in inv_map:
             parent = inv_map[current]
             ancestors.append(parent)
@@ -123,70 +117,51 @@ class FastHierarchicalClosetCube:
 
     def generate_closed_cube(self, aggregation_dict=None, verbose=False, as_dataframe=False):
         start_time = time.perf_counter()
-
         if aggregation_dict is None:
             aggregation_dict = {"COUNT": "SUM"}
 
-        # cube[combo] = {
-        #   "sum": np.array([...]),
-        #   "count": int,
-        #   "max": np.array([...]),
-        #   "min": np.array([...]),
-        # }
-        cube = {}
+        cube = defaultdict(list)
 
         for row in self.data:
             dim_values = row[:len(self.dim_cols)]
-            measures = np.asarray(row[len(self.dim_cols):], dtype=np.float64)
-
+            measures = row[len(self.dim_cols):]
             for combo in self._generate_generalizations(dim_values):
-                if combo not in cube:
-                    cube[combo] = {
-                        "sum": measures.copy(),
-                        "count": 1,
-                        "max": measures.copy(),
-                        "min": measures.copy(),
-                    }
-                else:
-                    cube[combo]["sum"] += measures
-                    cube[combo]["count"] += 1
-                    cube[combo]["max"] = np.maximum(cube[combo]["max"], measures)
-                    cube[combo]["min"] = np.minimum(cube[combo]["min"], measures)
+                cube[combo].append(measures)
 
         aggregated = {}
-        for key, stats in cube.items():
-            if stats["count"] < self.iceberg_threshold:
-                continue
-
+        for key, rows in cube.items():
             result = []
             for i, m in enumerate(self.measure_cols):
                 op = aggregation_dict.get(m, "SUM")
-
                 if op == "SUM":
-                    result.append(float(stats["sum"][i]))
+                    result.append(sum(r[i] for r in rows))
                 elif op == "COUNT":
-                    result.append(stats["count"])
+                    result.append(len(rows))
                 elif op == "AVG":
-                    result.append(float(stats["sum"][i] / stats["count"]))
+                    result.append(sum(r[i] for r in rows) / len(rows))
                 elif op == "MAX":
-                    result.append(float(stats["max"][i]))
+                    result.append(max(r[i] for r in rows))
                 elif op == "MIN":
-                    result.append(float(stats["min"][i]))
+                    result.append(min(r[i] for r in rows))
                 else:
                     raise ValueError(f"Agrégation inconnue : {op}")
-
             aggregated[key] = result
 
         closed = {}
 
+        # Optimization 3: Replace O(N^2) matching with sub-O(N) generation check
         grouped_by_measure = defaultdict(set)
         for k, v in aggregated.items():
             grouped_by_measure[tuple(v)].add(k)
 
         for k1, v1 in aggregated.items():
             is_closed = True
+
             same_measure_keys = grouped_by_measure[tuple(v1)]
 
+            # Since a tuple is NOT closed if a more general tuple has the EXACT SAME measure.
+            # "More general tuple" literally means it's an ancestor combination of k1.
+            # We can just generate all generalizations of k1, and check if any (except k1) exists in the same measure group.
             for gen_tuple in self._generate_generalizations(k1):
                 if gen_tuple != k1 and gen_tuple in same_measure_keys:
                     is_closed = False
@@ -203,19 +178,8 @@ class FastHierarchicalClosetCube:
 
         self.time = time.perf_counter() - start_time
 
-        result_rows = [tuple(list(k) + v) for k, v in closed.items()]
-
-        if as_dataframe:
-            try:
-                import pandas as pd
-                return pd.DataFrame(result_rows, columns=self.dim_cols + self.measure_cols)
-            except ImportError:
-                raise ImportError("pandas n'est pas installé, impossible de retourner un DataFrame.")
-
-        return result_rows
+        return [tuple(list(k) + v) for k, v in closed.items()]
 
     def _is_more_general(self, gen, spec):
-        return all(
-            g == s or g in self._get_all_ancestors(s, dim_name)
-            for g, s, dim_name in zip(gen, spec, self.dim_cols)
-        )
+        return all(g == s or g in self._get_all_ancestors(s, dim_name)
+                   for g, s, dim_name in zip(gen, spec, self.dim_cols))

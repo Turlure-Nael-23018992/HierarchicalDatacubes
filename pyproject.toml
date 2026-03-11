@@ -1,0 +1,19 @@
+[project]
+name = "hierarchical-datacubes"
+version = "0.1.0"
+description = "Project for analyzing hierarchical datacubes algorithm performance"
+authors = [
+    { name = "Nael" }
+]
+dependencies = [
+    "tabulate",
+    "numpy",
+]
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["scripts", "Core"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
