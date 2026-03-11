@@ -101,8 +101,9 @@ class StarCubing:
             generated_tuples += 1
 
         end_time = time.perf_counter()
-        print(f"\nDurée d'exécution StarCubing : {end_time - start_time:.5f} secondes (lignes traitées : {len(self.data)}, tuples générés : {generated_tuples})")
-        return results, end_time - start_time
+        self.time = end_time - start_time
+        print(f"\nDurée d'exécution StarCubing : {self.time:.5f} secondes (lignes traitées : {len(self.data)}, tuples générés : {generated_tuples})")
+        return results, self.time
 
 
     def export_star_tree_like_structure(self,

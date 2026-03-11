@@ -4,7 +4,6 @@ import re
 from tabulate import tabulate
 import time
 import sqlite3
-import pandas as pd
 
 
 class HierarchicalStarCubing:
@@ -36,6 +35,7 @@ class HierarchicalStarCubing:
                     self.hierarchy[child] = parent
 
         self.dim_to_idx = {dim: i for i, dim in enumerate(self.dim_cols)}
+        self.time = 0
 
     def _is_generalization_valid(self, key):
         """
@@ -164,20 +164,30 @@ class HierarchicalStarCubing:
     def run_from_db(self, db_path, table_name="Pokemon", isPrinted=True):
         start = time.perf_counter()
 
-        # Chargement du .db
         conn = sqlite3.connect(db_path)
-        df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM {table_name}")
+        
+        # Get columns and data
+        columns = [desc[0] for desc in cursor.description]
+        raw_data = cursor.fetchall()
         conn.close()
 
-        # Nettoyage
-        df = df.dropna()
+        # Handle missing COUNT and dropna equivalent
+        data = []
+        has_count = "COUNT" in columns
+        
+        for row in raw_data:
+            if any(val is None for val in row):
+                continue
+            
+            row_list = list(row)
+            if not has_count:
+                row_list.append(1)
+            data.append(row_list)
 
-        # Ajout de COUNT si absent
-        if "COUNT" not in df.columns:
-            df["COUNT"] = 1
-
-        data = df.values.tolist()
-        columns = list(df.columns)
+        if not has_count:
+            columns.append("COUNT")
 
         measure_cols = ["COUNT"]
         dim_cols = [col for col in columns if col not in measure_cols]
@@ -263,7 +273,7 @@ class HierarchicalStarCubing:
         )
         results = hsc.run_star_cubing_with_hierarchy(isPrinted=isPrinted)
 
-        elapsed = time.perf_counter() - start
-        print(f"\nDurée d'exécution HierarchicalStarCubing : {elapsed:.5f} secondes.")
+        self.time = time.perf_counter() - start
+        '''print(f"\nDurée d'exécution HierarchicalStarCubing : {self.time:.5f} secondes.")'''
 
         return results

@@ -13,9 +13,10 @@ from scripts.Algorithms.starCubing import *
 from scripts.Algorithms.HierarchicalStarCubing import *
 from scripts.Algorithms.closetCube import *
 from scripts.Algorithms.HierarchicalClosetCube import *
+from scripts.Algorithms.FastHierarchicalClosetCube import *
 from scripts.databaseManagement.Converter import *
 from scripts.databaseManagement.dbGetter import *
-from scripts.Visualisation.cubeTikZ import *
+#from scripts.Visualisation.cubeTikZ import *
 from scripts.databaseManagement.DataGenerator import *
 
 
@@ -24,6 +25,7 @@ class Main():
     def __init__(self, fp, isPrinted=False):
         self.fp = fp
         self.isPrinted = isPrinted
+        self.time = 0
 
     def _prepare_data(self):
         dbGet = dbGetter(self.fp)
@@ -64,10 +66,12 @@ class Main():
         # BUC a déjà sa propre logique de chargement mais on peut forcer la cohérence
         self.BUC = BUC(self.fp)
         self.BUC.run(isPrinted=self.isPrinted)
+        self.time = self.BUC.time
 
     def runHierarchicalBUC(self):
         self.hBUC = HierarchicalBUC()
         self.hBUC.run_buc_from_simple_hierarchical_db(self.fp,isPrinted=self.isPrinted)
+        self.time = self.hBUC.time
 
     def runStarCubing(self):
         data, all_cols, dims, measure = self._prepare_data()
@@ -75,22 +79,32 @@ class Main():
         self.starCubing.run(aggregation={measure: "SUM"})
         if self.isPrinted:
             self.starCubing.export_star_tree_like_structure(aggregation={measure: "SUM"})
+        self.time = self.starCubing.time
 
     def runHierarchicalStarCubing(self):
         self.hStartCubing = HierarchicalStarCubing({}, [], {"COUNT": "SUM"}, {})
         self.hStartCubing.run_from_db(self.fp, isPrinted=self.isPrinted)
+        self.time = self.hStartCubing.time
 
     def runClosetCube(self):
         data, all_cols, dims, measure = self._prepare_data()
         self.closetCube = ClosetCube(data, all_cols)
-        res, _ = self.closetCube.generate_cube(aggregation={measure: "SUM"})
+        res, exec_time = self.closetCube.generate_cube(aggregation={measure: "SUM"})
         if self.isPrinted:
             self.closetCube.export_closet_cube_structure(res)
+        self.time = exec_time
 
     def runHierarchicalClosetCube(self):
         data, all_cols, dims, measure = self._prepare_data()
         self.hClosetCube = HierarchicalClosetCube(data, all_cols, skip_first_col=False)
         self.hClosetCube.generate_closed_cube(verbose=self.isPrinted)
+        self.time = self.hClosetCube.time
+
+    def runFastHierarchicalClosetCube(self):
+        data, all_cols, dims, measure = self._prepare_data()
+        self.fastHClosetCube = FastHierarchicalClosetCube(data, all_cols, skip_first_col=False)
+        self.fastHClosetCube.generate_closed_cube(verbose=self.isPrinted)
+        self.time = self.fastHClosetCube.time
 
 def print_menu():
     print("\n" + "="*50)

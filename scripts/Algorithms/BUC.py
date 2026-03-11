@@ -64,6 +64,7 @@ class BUC:
             self._print_results(accum)
 
         conn.close()
+        self.time = elapsed
         print(f"\nDurée d'exécution BUC : {elapsed:.5f} secondes (lignes traitées : {self.row_count}, tuples générés : {self.last_tuple_count})")
         return accum, elapsed
 

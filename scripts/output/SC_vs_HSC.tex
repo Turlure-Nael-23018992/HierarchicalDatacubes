@@ -1,36 +1,48 @@
-\documentclass{standalone}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
+\documentclass[tikz, border=10pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes, positioning, matrix}
 \usepackage{xcolor}
 \begin{document}
-\begin{tikzpicture}
-\begin{axis}[
-xlabel={Cardinality},
-ylabel={Response time (s)},
-title={Performance of StarCubing vs Hierarchical StarCubing},
-title style={yshift=0.7em},
-ymode=linear,
-y coord trafo/.code={ \pgfmathparse{ (max(#1, 1e-09)/2000)^0.43 } \pgfmathresult },
-y coord inv trafo/.code={ \pgfmathparse{ (max(#1, 1e-09)^2.3255813953488373) * 2000 } \pgfmathresult },
-ymin=0, ymax=2000,
-y label style={at={(axis description cs:-0.1,0.5)},anchor=center},
-yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=0},
-ytick={ 0,399,800,1199,1599,2000 },
-minor y tick num=0,
-xmode=log, log basis x=10,
-xtick={ 1000,10000,100000,1000000,5000000,10000000,50000000,100000000 },
-xmax=110000000.00000001,
-xticklabel style={/pgf/number format/sci, /pgf/number format/sci zerofill, /pgf/number format/precision=0},
-x label style={at={(axis description cs:0.5,-0.1)},anchor=north},
-width=14cm, height=12cm,
-grid=major,
-legend style={at={(0.5,-0.2)}, anchor=north, legend columns=-1},
-tick align=outside,
-]
-\addplot[color=blue, mark=*] coordinates {(1000,0.00881) (5000,0.04386) (10000,0.09129) (50000,0.3883) (100000,0.71059) (1000000,8.34077) (2500000,16.96388) (5000000,35.92156) (10000000,85.82689) (25000000,200.92756) (50000000,468.02607)};
-\addlegendentry{StarCubing}
-\addplot[color=cyan, mark=o] coordinates {(1000,0.06068) (5000,0.0644) (10000,0.1478) (50000,0.49795) (100000,0.98454) (1000000,8.94839) (2500000,23.67525) (5000000,45.82078) (10000000,90.93317) (25000000,262.33933) (50000000,646.70359)};
-\addlegendentry{HierarchicalStarCubing}
-\end{axis}
+\definecolor{skyblue}{RGB}{135,206,235}
+\tikzset{smallskybluenode/.style={circle, fill=skyblue, draw=black, line width=0.5pt, minimum size=5pt, inner sep=0pt}}
+\definecolor{brightmaroon}{RGB}{195,33,72}
+\tikzset{smallbrightmaroonnode/.style={circle, fill=brightmaroon, draw=black, line width=0.5pt, minimum size=5pt, inner sep=0pt}}
+\begin{tikzpicture}[line join=bevel]
+\draw[-stealth, line width=1pt] (0pt,0pt) -- (320pt,0pt) node[anchor=north west, yshift=12pt] {Cardinality};
+\draw[-stealth, line width=1pt] (0pt,0pt) -- (0pt,270pt) node[anchor=south] {Response time (s)};
+\foreach \x/\xtext in {
+    0pt/$0$,
+    60pt/$14$,
+    120pt/$250$,
+    179pt/$3 \times 10^{3}$,
+    240pt/$6 \times 10^{4}$,
+    300pt/$9 \times 10^{5}$} {
+    \draw (\x, 2pt) -- (\x, -2pt) node[below, font=\tiny] {\xtext\strut};
+}
+\foreach \y/\ytext in {
+    0pt/$0$,
+    44pt/$4$,
+    88pt/$8$,
+    132pt/$12$,
+    176pt/$16$,
+    221pt/$20$} {
+    \draw (2pt, \y) -- (-2pt, \y) node[left, font=\tiny] {\ytext\strut};
+}
+\draw[skyblue, line width=2pt] (52pt,0pt) -- (100pt,0pt) -- (135pt,1pt) -- (235pt,1pt) -- (300pt,20pt);
+\filldraw[color=black, fill=skyblue] (52pt,0pt) circle (2.5pt);
+\filldraw[color=black, fill=skyblue] (100pt,0pt) circle (2.5pt);
+\filldraw[color=black, fill=skyblue] (135pt,1pt) circle (2.5pt);
+\filldraw[color=black, fill=skyblue] (235pt,1pt) circle (2.5pt);
+\filldraw[color=black, fill=skyblue] (300pt,20pt) circle (2.5pt);
+\draw[brightmaroon, line width=2pt] (52pt,0pt) -- (100pt,1pt) -- (135pt,1pt) -- (235pt,4pt) -- (300pt,115pt);
+\filldraw[color=black, fill=brightmaroon] (52pt,0pt) circle (2.5pt);
+\filldraw[color=black, fill=brightmaroon] (100pt,1pt) circle (2.5pt);
+\filldraw[color=black, fill=brightmaroon] (135pt,1pt) circle (2.5pt);
+\filldraw[color=black, fill=brightmaroon] (235pt,4pt) circle (2.5pt);
+\filldraw[color=black, fill=brightmaroon] (300pt,115pt) circle (2.5pt);
+\matrix [draw, fill=white, right=0.3cm] at (current bounding box.north east) {
+    \node [smallskybluenode, label=right:\texttt{StarCubing}] {}; \\
+    \node [smallbrightmaroonnode, label=right:\texttt{HierarchicalStarCubing}] {}; \\
+};
 \end{tikzpicture}
 \end{document}

@@ -1,4 +1,4 @@
-import pandas as pd
+import sqlite3
 from collections import defaultdict
 from tabulate import tabulate
 import time

@@ -1,14 +1,13 @@
 import itertools
 from collections import defaultdict
 import time
+import numpy as np
 
-class HierarchicalClosetCube:
+class FastHierarchicalClosetCube:
     """
-    Hierarchical ClosetCube Algorithm.
+    Optimized Hierarchical ClosetCube Algorithm.
+    """
 
-    Analyzes hierarchical structures to find closed cuboids, respecting 
-    specified dimension levels (e.g., Parent-Child ancestors).
-    """
     STATIC_HIERARCHY = {
         "Geography": {
             "Europe": ["France", "Allemagne", "Espagne", "Italie", "Belgique"],
@@ -69,15 +68,6 @@ class HierarchicalClosetCube:
     }
 
     def __init__(self, data, column_names, iceberg_threshold=0, skip_first_col=True):
-        """
-        Initialize Hierarchical ClosetCube.
-
-        Args:
-            data (list): Raw data rows.
-            column_names (list): Headers for the data.
-            iceberg_threshold (int): Minimum threshold for results.
-            skip_first_col (bool): Whether the first column is an ID to be ignored.
-        """
         self.iceberg_threshold = iceberg_threshold
         self.hierarchy = self.STATIC_HIERARCHY
         self.dim_cols = column_names[1:4] if skip_first_col else column_names[:3]
@@ -89,95 +79,119 @@ class HierarchicalClosetCube:
         if any(len(row) != len(self.dim_cols) + len(self.measure_cols) for row in self.data):
             raise ValueError("Longueur des tuples incohérente avec colonnes")
 
+        self._inv_maps = {}
+        for dim_name in self.dim_cols:
+            self._inv_maps[dim_name] = {
+                v: k
+                for k, vs in self.hierarchy.get(dim_name, {}).items()
+                for v in vs
+            }
+
+        self._ancestors_cache = {}
+        self._generalizations_cache = {}
+
     def _get_all_ancestors(self, val, dim_name):
-        """
-        Retrieve all ancestors of a value within a specific dimension hierarchy.
+        cache_key = (val, dim_name)
+        if cache_key in self._ancestors_cache:
+            return self._ancestors_cache[cache_key]
 
-        Args:
-            val (str): The value to find ancestors for.
-            dim_name (str): The name of the dimension.
-
-        Returns:
-            list: A list of ancestor values.
-        """
         ancestors = []
-        inv_map = {v: k for k, vs in self.hierarchy.get(dim_name, {}).items() for v in vs}
+        inv_map = self._inv_maps.get(dim_name, {})
         current = val
+
         while current in inv_map:
             parent = inv_map[current]
             ancestors.append(parent)
             current = parent
+
+        self._ancestors_cache[cache_key] = ancestors
         return ancestors
 
     def _generate_generalizations(self, row_dims):
-        """
-        Generate all valid hierarchical generalizations for a set of dimension values.
+        cache_key = tuple(row_dims)
+        if cache_key in self._generalizations_cache:
+            return self._generalizations_cache[cache_key]
 
-        Args:
-            row_dims (list): Values for each dimension in a row.
-
-        Returns:
-            iterable: All valid combinations (product of value paths).
-        """
         all_paths = []
         for dim_val, dim_name in zip(row_dims, self.dim_cols):
             ancestors = self._get_all_ancestors(dim_val, dim_name)
             all_paths.append([dim_val] + ancestors)
-        return itertools.product(*all_paths)
+
+        results = list(itertools.product(*all_paths))
+        self._generalizations_cache[cache_key] = results
+        return results
 
     def generate_closed_cube(self, aggregation_dict=None, verbose=False, as_dataframe=False):
-        """
-        Generate the closed hierarchical data cube.
-
-        Args:
-            aggregation_dict (dict): Rules for aggregating measures.
-            verbose (bool): If True, prints a fancy grid of results.
-            as_dataframe (bool): Reserved for future use.
-
-        Returns:
-            list: List of closed hierarchical tuples.
-        """
         start_time = time.perf_counter()
+
         if aggregation_dict is None:
             aggregation_dict = {"COUNT": "SUM"}
 
-        cube = defaultdict(list)
+        # cube[combo] = {
+        #   "sum": np.array([...]),
+        #   "count": int,
+        #   "max": np.array([...]),
+        #   "min": np.array([...]),
+        # }
+        cube = {}
 
         for row in self.data:
             dim_values = row[:len(self.dim_cols)]
-            measures = row[len(self.dim_cols):]
+            measures = np.asarray(row[len(self.dim_cols):], dtype=np.float64)
+
             for combo in self._generate_generalizations(dim_values):
-                cube[tuple(combo)].append(measures)
+                if combo not in cube:
+                    cube[combo] = {
+                        "sum": measures.copy(),
+                        "count": 1,
+                        "max": measures.copy(),
+                        "min": measures.copy(),
+                    }
+                else:
+                    cube[combo]["sum"] += measures
+                    cube[combo]["count"] += 1
+                    cube[combo]["max"] = np.maximum(cube[combo]["max"], measures)
+                    cube[combo]["min"] = np.minimum(cube[combo]["min"], measures)
 
         aggregated = {}
-        for key, rows in cube.items():
+        for key, stats in cube.items():
+            if stats["count"] < self.iceberg_threshold:
+                continue
+
             result = []
             for i, m in enumerate(self.measure_cols):
-                values = [r[i] for r in rows]
                 op = aggregation_dict.get(m, "SUM")
+
                 if op == "SUM":
-                    result.append(sum(values))
+                    result.append(float(stats["sum"][i]))
                 elif op == "COUNT":
-                    result.append(len(values))
+                    result.append(stats["count"])
                 elif op == "AVG":
-                    result.append(sum(values) / len(values))
+                    result.append(float(stats["sum"][i] / stats["count"]))
                 elif op == "MAX":
-                    result.append(max(values))
+                    result.append(float(stats["max"][i]))
                 elif op == "MIN":
-                    result.append(min(values))
+                    result.append(float(stats["min"][i]))
                 else:
                     raise ValueError(f"Agrégation inconnue : {op}")
+
             aggregated[key] = result
 
         closed = {}
+
+        grouped_by_measure = defaultdict(set)
+        for k, v in aggregated.items():
+            grouped_by_measure[tuple(v)].add(k)
+
         for k1, v1 in aggregated.items():
             is_closed = True
-            for k2, v2 in aggregated.items():
-                if k1 == k2:
-                    continue
-                if self._is_more_general(k2, k1) and v1 == v2:
+            same_measure_keys = grouped_by_measure[tuple(v1)]
+
+            for gen_tuple in self._generate_generalizations(k1):
+                if gen_tuple != k1 and gen_tuple in same_measure_keys:
                     is_closed = False
                     break
+
             if is_closed:
                 closed[k1] = v1
 
@@ -188,10 +202,20 @@ class HierarchicalClosetCube:
             print(tabulate(rows, headers=headers, tablefmt="fancy_grid"))
 
         self.time = time.perf_counter() - start_time
-        '''print(f"\nDurée d'exécution Hierarchical ClosetCube : {self.time:.5f} secondes")'''
 
-        return [tuple(list(k) + v) for k, v in closed.items()]
+        result_rows = [tuple(list(k) + v) for k, v in closed.items()]
+
+        if as_dataframe:
+            try:
+                import pandas as pd
+                return pd.DataFrame(result_rows, columns=self.dim_cols + self.measure_cols)
+            except ImportError:
+                raise ImportError("pandas n'est pas installé, impossible de retourner un DataFrame.")
+
+        return result_rows
 
     def _is_more_general(self, gen, spec):
-        return all(g == s or g in self._get_all_ancestors(s, dim_name)
-                   for g, s, dim_name in zip(gen, spec, self.dim_cols))
+        return all(
+            g == s or g in self._get_all_ancestors(s, dim_name)
+            for g, s, dim_name in zip(gen, spec, self.dim_cols)
+        )

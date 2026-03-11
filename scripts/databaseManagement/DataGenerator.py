@@ -833,92 +833,93 @@ class DataGenerator:
         :param nb_lignes: Nombre de lignes à insérer dans la table
         """
 
-        db_name = f"hierarchie_db_C3_R{nb_lignes}.db"
+        db_name = f"DB/hierarchie_db_C3_R{nb_lignes}.db"
 
-        if os.path.exists(db_name):
-            os.remove(db_name)
+        if not os.path.exists(db_name):
+            geo_values = [
 
-        geo_values = [
-            # Pays
-            "France", "Allemagne", "Espagne", "Italie", "Belgique",
+                # Pays
+                "France", "Allemagne", "Espagne", "Italie", "Belgique",
 
-            # Régions
-            "Île-de-France", "PACA", "Hauts-de-France",
-            "Bavière", "Rhénanie", "Catalogne", "Andalousie",
-            "Lombardie", "Piémont", "Wallonie",
+                # Régions
+                "Île-de-France", "PACA", "Hauts-de-France",
+                "Bavière", "Rhénanie", "Catalogne", "Andalousie",
+                "Lombardie", "Piémont", "Wallonie",
 
-            # Villes
-            "Paris", "Nanterre", "Versailles", "Boulogne-Billancourt", "Saint-Denis",
-            "Marseille", "Nice", "Toulon", "Avignon", "Aix-en-Provence",
-            "Lille", "Amiens", "Roubaix", "Tourcoing", "Dunkerque",
+                # Villes
+                "Paris", "Nanterre", "Versailles", "Boulogne-Billancourt", "Saint-Denis",
+                "Marseille", "Nice", "Toulon", "Avignon", "Aix-en-Provence",
+                "Lille", "Amiens", "Roubaix", "Tourcoing", "Dunkerque",
 
-            "Munich", "Nuremberg", "Augsbourg", "Würzburg", "Rosenheim",
-            "Francfort", "Hambourg", "Strasbourg", "Mayence", "Trèves",
+                "Munich", "Nuremberg", "Augsbourg", "Würzburg", "Rosenheim",
+                "Francfort", "Hambourg", "Strasbourg", "Mayence", "Trèves",
 
-            "Barcelone", "Girona", "Lleida", "Tarragone", "Manresa",
-            "Séville", "Grenade", "Cordoue", "Málaga", "Almería",
+                "Barcelone", "Girona", "Lleida", "Tarragone", "Manresa",
+                "Séville", "Grenade", "Cordoue", "Málaga", "Almería",
 
-            "Milan", "Bergame", "Brescia", "Côme", "Pavie",
-            "Turin", "Alessandria", "Asti", "Cuneo", "Novare",
+                "Milan", "Bergame", "Brescia", "Côme", "Pavie",
+                "Turin", "Alessandria", "Asti", "Cuneo", "Novare",
 
-            "Liège", "Namur", "Charleroi", "Mons", "La Louvière"
-        ]
+                "Liège", "Namur", "Charleroi", "Mons", "La Louvière"
+            ]
 
-        time_values = [
-            # Années
-            "2021", "2022", "2023", "2024",
+            time_values = [
+                # Années
+                "2021", "2022", "2023", "2024",
 
-            # Mois
-            "2021-12", "2022-01", "2022-12", "2023-01", "2023-02", "2023-07", "2023-08", "2024-03", "2024-06",
-            "2024-07",
+                # Mois
+                "2021-12", "2022-01", "2022-12", "2023-01", "2023-02", "2023-07", "2023-08", "2024-03", "2024-06",
+                "2024-07",
 
-            # Jours
-            "2021-12-31", "2022-01-01", "2022-12-24", "2022-12-31", "2023-01-01", "2023-01-15",
-            "2023-02-01", "2023-02-14", "2023-07-01", "2023-08-01", "2023-08-15", "2024-03-08",
-            "2024-06-30", "2024-07-01", "2024-07-14", "2024-07-31", "2023-12-25", "2022-07-04", "2021-05-01",
-            "2023-05-08", "2023-11-11", "2022-04-01"
-        ]
+                # Jours
+                "2021-12-31", "2022-01-01", "2022-12-24", "2022-12-31", "2023-01-01", "2023-01-15",
+                "2023-02-01", "2023-02-14", "2023-07-01", "2023-08-01", "2023-08-15", "2024-03-08",
+                "2024-06-30", "2024-07-01", "2024-07-14", "2024-07-31", "2023-12-25", "2022-07-04", "2021-05-01",
+                "2023-05-08", "2023-11-11", "2022-04-01"
+            ]
 
-        food_values = [
-            # Catégories
-            "Fruits", "Légumes", "Céréales", "Viandes", "Produits laitiers",
+            food_values = [
+                # Catégories
+                "Fruits", "Légumes", "Céréales", "Viandes", "Produits laitiers",
 
-            # Types
-            "Fruits rouges", "Agrumes", "Légumes verts", "Tubercules", "Viandes rouges", "Poissons", "Fromages",
-            "Yaourts", "Pâtes",
+                # Types
+                "Fruits rouges", "Agrumes", "Légumes verts", "Tubercules", "Viandes rouges", "Poissons", "Fromages",
+                "Yaourts", "Pâtes",
 
-            # Produits
-            "Fraise", "Framboise", "Orange", "Citron", "Épinard", "Brocoli", "Pomme de terre", "Carotte",
-            "Boeuf", "Poulet", "Saumon", "Thon", "Camembert", "Comté", "Yaourt nature", "Yaourt aux fruits",
-            "Spaghetti", "Penne"
-        ]
+                # Produits
+                "Fraise", "Framboise", "Orange", "Citron", "Épinard", "Brocoli", "Pomme de terre", "Carotte",
+                "Boeuf", "Poulet", "Saumon", "Thon", "Camembert", "Comté", "Yaourt nature", "Yaourt aux fruits",
+                "Spaghetti", "Penne"
+            ]
 
-        conn = sqlite3.connect(db_name)
-        c = conn.cursor()
+            conn = sqlite3.connect(db_name)
+            c = conn.cursor()
 
-        c.execute("""
-                  CREATE TABLE IF NOT EXISTS Pokemon
-                  (
-                      Geography
-                      TEXT,
-                      Time
-                      TEXT,
-                      Food
-                      TEXT
-                  )
-                  """)
+            c.execute("""
+                    CREATE TABLE IF NOT EXISTS Pokemon
+                    (
+                        Geography
+                        TEXT,
+                        Time
+                        TEXT,
+                        Food
+                        TEXT
+                    )
+                    """)
 
-        for _ in range(nb_lignes):
-            geo = random.choice(geo_values)
-            time = random.choice(time_values)
-            food = random.choice(food_values)
+            for _ in range(nb_lignes):
+                geo = random.choice(geo_values)
+                time = random.choice(time_values)
+                food = random.choice(food_values)
 
-            c.execute("INSERT INTO Pokemon (Geography, Time, Food) VALUES (?, ?, ?)",
-                      (geo, time, food))
+                c.execute("INSERT INTO Pokemon (Geography, Time, Food) VALUES (?, ?, ?)",
+                        (geo, time, food))
 
-        conn.commit()
-        conn.close()
-        print(f"✅ Base '{db_name}' générée avec {nb_lignes} lignes (sans mesure).")
+            conn.commit()
+            conn.close()
+            print(f"✅ Base '{db_name}' générée avec {nb_lignes} lignes (sans mesure).")
+        else :
+            print(f"✅ Base '{db_name}' existe déjà.")
 
 
 if __name__ == "__main__":

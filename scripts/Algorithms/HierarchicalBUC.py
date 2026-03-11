@@ -1,6 +1,5 @@
 import time
 import sqlite3
-import pandas as pd
 from collections import defaultdict
 from tabulate import tabulate
 from itertools import product
@@ -85,19 +84,32 @@ class HierarchicalBUC:
         """
         start = time.time()
 
-        # Lecture DB
         conn = sqlite3.connect(db_path)
-        df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM {table_name}")
+        
+        columns = [desc[0] for desc in cursor.description]
+        raw_rows = cursor.fetchall()
         conn.close()
 
-        df = df.dropna()
-        if "COUNT" not in df.columns:
-            df["COUNT"] = 1
+        has_count = "COUNT" in columns
+        data = []
+        for row in raw_rows:
+            if any(val is None for val in row):
+                continue
+            
+            row_list = list(row)
+            if not has_count:
+                row_list.append(1)
+            data.append(row_list)
 
-        dims = ["Geography", "Time", "Food"]
-        meas = ["COUNT"]
-        data = df[dims + meas].values.tolist()
         self.row_count = len(data)
+        
+        if not has_count:
+            columns.append("COUNT")
+            
+        dims = [col for col in columns if col != "COUNT"]
+        meas = ["COUNT"]
 
         results = self._run_flat_buc(
             {i: row for i, row in enumerate(data)},
@@ -109,11 +121,11 @@ class HierarchicalBUC:
 
         self.last_tuple_count = sum(len(g) for g in results.values())
 
-        elapsed = time.time() - start
-        print(
-            f"\nDurée d'exécution BUC hiérarchique : {elapsed:.5f} secondes "
+        self.time = time.time() - start
+        '''print(
+            f"\nDurée d'exécution BUC hiérarchique : {self.time:.5f} secondes "
             f"(lignes traitées : {self.row_count}, tuples générés : {self.last_tuple_count})"
-        )
+        )'''
         return results
 
     def _run_flat_buc(self, data_dict, dimensions, aggregation, hierarchy, isPrinted=True):

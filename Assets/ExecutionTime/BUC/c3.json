@@ -1,0 +1,30 @@
+{
+    "time_data": {
+        "10": [
+            0.0006250999999999997
+        ],
+        "100": [
+            0.010857200000000001
+        ],
+        "500": [
+            0.021817800000000002
+        ],
+        "50000": [
+            0.2995388
+        ],
+        "1000000": [
+            5.6939857
+        ]
+    },
+    "max_rows": 1000000,
+    "max_time": 5.6939857,
+    "server_config": {
+        "server_name": "Nael-PC",
+        "cpu": "AMD Ryzen 5 3600X @ 3.8 GHz",
+        "ram": "32 GB",
+        "os": "Windows",
+        "python_version": "Python 3.10 (interpreted with PyPy 7.3)",
+        "interpreter": "PyPy 7.3",
+        "notes": ""
+    }
+}
