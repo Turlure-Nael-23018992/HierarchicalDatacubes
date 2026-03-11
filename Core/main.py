@@ -3,7 +3,7 @@ import os
 import sqlite3
 
 # Ajout de la racine du projet au sys.path pour que les imports 'scripts.xyz' fonctionnent
-project_root = os.path.abspath(os.path.dirname(__file__))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 

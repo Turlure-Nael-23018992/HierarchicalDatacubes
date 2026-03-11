@@ -1,0 +1,9 @@
+{
+    "server_name": "Nael-PC",
+    "cpu": "AMD Ryzen 5 3600X @ 3.8 GHz",
+    "ram": "32 GB",
+    "os": "Windows",
+    "python_version": "Python 3.10 (interpreted with PyPy 7.3)",
+    "interpreter": "PyPy 7.3",
+    "notes": ""
+}
