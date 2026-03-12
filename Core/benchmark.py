@@ -14,6 +14,9 @@ from scripts.Algorithms.starCubing import *
 from scripts.Algorithms.HierarchicalStarCubing import *
 from scripts.Algorithms.closetCube import *
 from scripts.Algorithms.HierarchicalClosetCube import *
+from scripts.databaseManagement.Converter import *
+from scripts.databaseManagement.dbGetter import *
+#from scripts.Visualisation.cubeTikZ import *
 from scripts.databaseManagement.DataGenerator import *
 from Core.main import Main
 
@@ -35,13 +38,13 @@ class Benchmark:
         self.algo_name = algo_name
         self.algo = ALGO[algo_name]
         self.times = {}
-        self.output_file = f"Assets/ExecutionTime/{algo_name}/c3.json"
+        self.output_file = os.path.join(project_root, "Assets", "ExecutionTime", algo_name, "c3.json")
 
     def run(self):
         for col in COLS:
             for row in ROWS:
                 #DataGenerator().generate_hierarchical_facts_db(row)
-                self.fp = f"../DB/hierarchie_db_C3_R{row}.db"
+                self.fp = os.path.join(project_root, "DB", f"hierarchie_db_C3_R{row}.db")
                 if self.algo == BUC:
                     main = Main(self.fp, isPrinted=self.isPrinted)
                     main.runBUC()
@@ -59,7 +62,7 @@ class Benchmark:
                     main.runClosetCube()
                 elif self.algo == HierarchicalClosetCube:
                     main = Main(self.fp, isPrinted=self.isPrinted)
-                    main.runFastHierarchicalClosetCube()
+                    main.runHierarchicalClosetCube()
                 self.times[row] = [main.time]
                 print(f"Row {row}: {main.time}s")
                 self.write_times()
@@ -67,7 +70,7 @@ class Benchmark:
     def write_times(self):
         os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
-        config_path = "../nael-config.json"
+        config_path = os.path.join(project_root, "nael-config.json")
         server_config = {}
         if os.path.exists(config_path):
             with open(config_path, "r", encoding="utf-8") as f:

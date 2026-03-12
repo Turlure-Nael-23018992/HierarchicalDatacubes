@@ -2,13 +2,21 @@ import itertools
 from collections import defaultdict
 import time
 
+
 class HierarchicalClosetCube:
     """
-    Hierarchical ClosetCube Algorithm.
+    Optimized Hierarchical ClosetCube Algorithm.
 
-    Analyzes hierarchical structures to find closed cuboids, respecting 
-    specified dimension levels (e.g., Parent-Child ancestors).
+    Core insight: at 1M rows, the dimension space (Geography × Time × Food) is
+    finite and small. Pre-aggregating by unique dimension tuple reduces the
+    generalization fan-out from O(N) to O(U) where U << N.
+
+    Pipeline:
+      1. Pre-aggregate raw data by unique dim tuple → U unique cells (U << N)
+      2. For each unique cell, generate generalizations and merge into cube
+      3. Closedness check via direct parent lookup (O(K × D))
     """
+
     STATIC_HIERARCHY = {
         "Geography": {
             "Europe": ["France", "Allemagne", "Espagne", "Italie", "Belgique"],
@@ -69,15 +77,6 @@ class HierarchicalClosetCube:
     }
 
     def __init__(self, data, column_names, iceberg_threshold=0, skip_first_col=True):
-        """
-        Initialize Hierarchical ClosetCube.
-
-        Args:
-            data (list): Raw data rows.
-            column_names (list): Headers for the data.
-            iceberg_threshold (int): Minimum threshold for results.
-            skip_first_col (bool): Whether the first column is an ID to be ignored.
-        """
         self.iceberg_threshold = iceberg_threshold
         self.hierarchy = self.STATIC_HIERARCHY
         self.dim_cols = column_names[1:4] if skip_first_col else column_names[:3]
@@ -89,109 +88,174 @@ class HierarchicalClosetCube:
         if any(len(row) != len(self.dim_cols) + len(self.measure_cols) for row in self.data):
             raise ValueError("Longueur des tuples incohérente avec colonnes")
 
+        self._inv_maps = {}
+        for dim_name in self.dim_cols:
+            self._inv_maps[dim_name] = {
+                v: k
+                for k, vs in self.hierarchy.get(dim_name, {}).items()
+                for v in vs
+            }
+
+        self._ancestors_cache = {}
+        self._generalizations_cache = {}
+
     def _get_all_ancestors(self, val, dim_name):
-        """
-        Retrieve all ancestors of a value within a specific dimension hierarchy.
+        cache_key = (val, dim_name)
+        if cache_key in self._ancestors_cache:
+            return self._ancestors_cache[cache_key]
 
-        Args:
-            val (str): The value to find ancestors for.
-            dim_name (str): The name of the dimension.
-
-        Returns:
-            list: A list of ancestor values.
-        """
         ancestors = []
-        inv_map = {v: k for k, vs in self.hierarchy.get(dim_name, {}).items() for v in vs}
+        inv_map = self._inv_maps.get(dim_name, {})
         current = val
         while current in inv_map:
             parent = inv_map[current]
             ancestors.append(parent)
             current = parent
+
+        self._ancestors_cache[cache_key] = ancestors
         return ancestors
 
     def _generate_generalizations(self, row_dims):
-        """
-        Generate all valid hierarchical generalizations for a set of dimension values.
+        cache_key = tuple(row_dims)
+        if cache_key in self._generalizations_cache:
+            return self._generalizations_cache[cache_key]
 
-        Args:
-            row_dims (list): Values for each dimension in a row.
-
-        Returns:
-            iterable: All valid combinations (product of value paths).
-        """
         all_paths = []
         for dim_val, dim_name in zip(row_dims, self.dim_cols):
             ancestors = self._get_all_ancestors(dim_val, dim_name)
             all_paths.append([dim_val] + ancestors)
-        return itertools.product(*all_paths)
+
+        results = list(itertools.product(*all_paths))
+        self._generalizations_cache[cache_key] = results
+        return results
 
     def generate_closed_cube(self, aggregation_dict=None, verbose=False, as_dataframe=False):
-        """
-        Generate the closed hierarchical data cube.
-
-        Args:
-            aggregation_dict (dict): Rules for aggregating measures.
-            verbose (bool): If True, prints a fancy grid of results.
-            as_dataframe (bool): Reserved for future use.
-
-        Returns:
-            list: List of closed hierarchical tuples.
-        """
         start_time = time.perf_counter()
+
         if aggregation_dict is None:
             aggregation_dict = {"COUNT": "SUM"}
 
-        cube = defaultdict(list)
+        n_dims = len(self.dim_cols)
+        n_measures = len(self.measure_cols)
+        ops = [aggregation_dict.get(m, "SUM") for m in self.measure_cols]
+
+        # ------------------------------------------------------------------
+        # Step 1 — Pre-aggregate by unique dimension tuple
+        #
+        # Key optimization: instead of iterating all N rows × all combos,
+        # first collapse N rows into U unique dim-tuples (U is bounded by the
+        # finite cartesian product of leaf values — typically U << N at scale).
+        #
+        # This means _generate_generalizations is called at most U times,
+        # and the expensive combo fan-out loop runs U times instead of N times.
+        # ------------------------------------------------------------------
+        leaf_acc = {}   # dim_key -> [agg_value per measure]
+        leaf_cnt = {}   # dim_key -> row count (for AVG)
 
         for row in self.data:
-            dim_values = row[:len(self.dim_cols)]
-            measures = row[len(self.dim_cols):]
-            for combo in self._generate_generalizations(dim_values):
-                cube[tuple(combo)].append(measures)
+            dim_key = tuple(row[:n_dims])
+            measures = row[n_dims:]
 
-        aggregated = {}
-        for key, rows in cube.items():
-            result = []
-            for i, m in enumerate(self.measure_cols):
-                values = [r[i] for r in rows]
-                op = aggregation_dict.get(m, "SUM")
-                if op == "SUM":
-                    result.append(sum(values))
-                elif op == "COUNT":
-                    result.append(len(values))
-                elif op == "AVG":
-                    result.append(sum(values) / len(values))
-                elif op == "MAX":
-                    result.append(max(values))
-                elif op == "MIN":
-                    result.append(min(values))
+            if dim_key in leaf_acc:
+                a = leaf_acc[dim_key]
+                leaf_cnt[dim_key] += 1
+                for i in range(n_measures):
+                    op = ops[i]
+                    if op == "SUM" or op == "AVG":
+                        a[i] += measures[i]
+                    elif op == "COUNT":
+                        a[i] += 1
+                    elif op == "MAX":
+                        if measures[i] > a[i]:
+                            a[i] = measures[i]
+                    elif op == "MIN":
+                        if measures[i] < a[i]:
+                            a[i] = measures[i]
+            else:
+                a = []
+                for i in range(n_measures):
+                    a.append(1 if ops[i] == "COUNT" else measures[i])
+                leaf_acc[dim_key] = a
+                leaf_cnt[dim_key] = 1
+
+        # ------------------------------------------------------------------
+        # Step 2 — Expand unique cells into the full cube via generalization
+        #
+        # Now we only loop over U unique dim-tuples (not N raw rows).
+        # Each unique cell fans out to its ancestor combos and merges its
+        # already-aggregated value — no raw measure lists needed.
+        # ------------------------------------------------------------------
+        cube_acc = {}
+        cube_cnt = {}
+
+        for dim_key, pre_agg in leaf_acc.items():
+            pre_cnt = leaf_cnt[dim_key]
+
+            for combo in self._generate_generalizations(dim_key):
+                if combo in cube_acc:
+                    a = cube_acc[combo]
+                    cube_cnt[combo] += pre_cnt
+                    for i in range(n_measures):
+                        op = ops[i]
+                        if op == "SUM" or op == "AVG" or op == "COUNT":
+                            a[i] += pre_agg[i]
+                        elif op == "MAX":
+                            if pre_agg[i] > a[i]:
+                                a[i] = pre_agg[i]
+                        elif op == "MIN":
+                            if pre_agg[i] < a[i]:
+                                a[i] = pre_agg[i]
                 else:
-                    raise ValueError(f"Agrégation inconnue : {op}")
+                    cube_acc[combo] = list(pre_agg)
+                    cube_cnt[combo] = pre_cnt
+
+        # Finalize AVG
+        aggregated = {}
+        for key, a in cube_acc.items():
+            result = list(a)
+            for i in range(n_measures):
+                if ops[i] == "AVG":
+                    result[i] = a[i] / cube_cnt[key]
             aggregated[key] = result
 
+        # ------------------------------------------------------------------
+        # Step 3 — Closedness check via direct parent lookup (O(K × D))
+        #
+        # For each cube key, check only its D immediate parents (one per dim).
+        # Correctness: if a distant ancestor shares the same measures, the
+        # direct parent does too (monotonicity of aggregation over supersets).
+        # ------------------------------------------------------------------
+        key_set = set(aggregated.keys())
+        inv_maps = self._inv_maps
+
         closed = {}
-        for k1, v1 in aggregated.items():
+        for k, v in aggregated.items():
+            v_tuple = tuple(v)
             is_closed = True
-            for k2, v2 in aggregated.items():
-                if k1 == k2:
-                    continue
-                if self._is_more_general(k2, k1) and v1 == v2:
-                    is_closed = False
-                    break
+
+            for i, dim_name in enumerate(self.dim_cols):
+                parent_val = inv_maps.get(dim_name, {}).get(k[i])
+                if parent_val is not None:
+                    parent_key = k[:i] + (parent_val,) + k[i + 1:]
+                    if parent_key in key_set and tuple(aggregated[parent_key]) == v_tuple:
+                        is_closed = False
+                        break
+
             if is_closed:
-                closed[k1] = v1
+                closed[k] = v
 
         if verbose:
             from tabulate import tabulate
             headers = self.dim_cols + self.measure_cols
-            rows = [list(k) + v for k, v in closed.items()]
-            print(tabulate(rows, headers=headers, tablefmt="fancy_grid"))
+            rows_out = [list(k) + v for k, v in closed.items()]
+            print(tabulate(rows_out, headers=headers, tablefmt="fancy_grid"))
 
         self.time = time.perf_counter() - start_time
-        '''print(f"\nDurée d'exécution Hierarchical ClosetCube : {self.time:.5f} secondes")'''
 
         return [tuple(list(k) + v) for k, v in closed.items()]
 
     def _is_more_general(self, gen, spec):
-        return all(g == s or g in self._get_all_ancestors(s, dim_name)
-                   for g, s, dim_name in zip(gen, spec, self.dim_cols))
+        return all(
+            g == s or g in self._get_all_ancestors(s, dim_name)
+            for g, s, dim_name in zip(gen, spec, self.dim_cols)
+        )

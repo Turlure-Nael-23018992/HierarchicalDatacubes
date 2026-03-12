@@ -13,7 +13,6 @@ from scripts.Algorithms.starCubing import *
 from scripts.Algorithms.HierarchicalStarCubing import *
 from scripts.Algorithms.closetCube import *
 from scripts.Algorithms.HierarchicalClosetCube import *
-from scripts.Algorithms.FastHierarchicalClosetCube import *
 from scripts.databaseManagement.Converter import *
 from scripts.databaseManagement.dbGetter import *
 #from scripts.Visualisation.cubeTikZ import *
@@ -99,12 +98,6 @@ class Main():
         self.hClosetCube = HierarchicalClosetCube(data, all_cols, skip_first_col=False)
         self.hClosetCube.generate_closed_cube(verbose=self.isPrinted)
         self.time = self.hClosetCube.time
-
-    def runFastHierarchicalClosetCube(self):
-        data, all_cols, dims, measure = self._prepare_data()
-        self.fastHClosetCube = FastHierarchicalClosetCube(data, all_cols, skip_first_col=False)
-        self.fastHClosetCube.generate_closed_cube(verbose=self.isPrinted)
-        self.time = self.fastHClosetCube.time
 
 def print_menu():
     print("\n" + "="*50)
