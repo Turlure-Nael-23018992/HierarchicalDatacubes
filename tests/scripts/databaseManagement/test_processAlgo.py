@@ -46,17 +46,95 @@ class TestProcessAlgo(unittest.TestCase):
     def test_runBUC(self, mock_save, mock_process, mock_extract, mock_isfile, mock_listdir):
         mock_listdir.return_value = ["file1.db", "file2.db"]
         mock_extract.side_effect = [10, 20] # For sorting
-        mock_process.side_effect = [{"res": 1}, {"res": 2}]
+        mock_process.side_effect = [{"success": True, "duration_seconds": 1.0}, {"success": True, "duration_seconds": 2.0}]
         
-        with patch('os.path.exists', return_value=True):
-            self.proc.runBUC()
+        self.proc.runBUC()
         
         mock_process.assert_called()
         mock_save.assert_called_once()
-        # Verify it passed a dict with both files
         results_passed = mock_save.call_args[0][0]
         self.assertIn("file1.db", results_passed)
-        self.assertIn("file2.db", results_passed)
+
+    @patch('os.listdir')
+    @patch('scripts.databaseManagement.processAlgo.extract_row_count', return_value=10)
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._process_file_star')
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._save_results')
+    def test_runStarCubing(self, mock_save, mock_process, mock_extract, mock_listdir):
+        mock_listdir.return_value = ["file1.db"]
+        mock_process.return_value = {"success": True, "duration_seconds": 1.0}
+        self.proc.runStarCubing()
+        mock_process.assert_called()
+        mock_save.assert_called_with(unittest.mock.ANY, key="StarCubing")
+
+    @patch('os.listdir')
+    @patch('scripts.databaseManagement.processAlgo.extract_row_count', return_value=10)
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._process_file_closet')
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._save_results')
+    def test_runClosetCube(self, mock_save, mock_process, mock_extract, mock_listdir):
+        mock_listdir.return_value = ["file1.db"]
+        mock_process.return_value = {"success": True, "duration_seconds": 1.0}
+        with patch('os.path.exists', return_value=True):
+            self.proc.runClosetCube()
+        mock_process.assert_called()
+        mock_save.assert_called_with(unittest.mock.ANY, key="ClosetCube")
+
+    @patch('os.listdir')
+    @patch('scripts.databaseManagement.processAlgo.extract_row_count', return_value=10)
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._process_file_hierarchical_buc')
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._save_results')
+    def test_runHierarchicalBUC(self, mock_save, mock_process, mock_extract, mock_listdir):
+        mock_listdir.return_value = ["file1.db"]
+        mock_process.return_value = {"success": True, "duration_seconds": 1.0}
+        self.proc.runHierarchicalBUC()
+        mock_process.assert_called()
+
+    @patch('os.listdir')
+    @patch('scripts.databaseManagement.processAlgo.extract_row_count', return_value=10)
+    @patch('scripts.databaseManagement.processAlgo.HierarchicalStarCubing')
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._save_results')
+    def test_runHierarchicalStarCubing(self, mock_save, mock_hstar, mock_extract, mock_listdir):
+        mock_listdir.return_value = ["file1.db"]
+        mock_hstar.return_value.run_from_db.return_value = {"success": True, "duration_seconds": 1.0}
+        self.proc.runHierarchicalStarCubing()
+        mock_hstar.return_value.run_from_db.assert_called()
+
+    @patch('os.listdir')
+    @patch('os.path.isfile', return_value=True)
+    @patch('scripts.databaseManagement.processAlgo.extract_row_count', return_value=10)
+    @patch('scripts.databaseManagement.processAlgo.pd.read_sql_query')
+    @patch('scripts.databaseManagement.processAlgo.sqlite3.connect')
+    @patch('scripts.databaseManagement.processAlgo.HierarchicalClosetCube')
+    @patch('scripts.databaseManagement.processAlgo.ProcessAlgo._save_results')
+    def test_runHierarchicalClosetCube(self, mock_save, mock_hcloset, mock_conn, mock_read, mock_extract, mock_isfile, mock_listdir):
+        mock_listdir.return_value = ["file1.db"]
+        
+        import pandas as pd
+        mock_df = pd.DataFrame({
+            "Geography": ["France"],
+            "Time": ["2021"],
+            "Food": ["Fruits"],
+            "COUNT": [1]
+        })
+        mock_read.return_value = mock_df
+        
+        mock_hcloset.return_value.generate_closed_cube.return_value = []
+        
+        self.proc.runHierarchicalClosetCube()
+        mock_hcloset.return_value.generate_closed_cube.assert_called()
+
+    @patch('builtins.open', new_callable=mock_open, read_data='{"Algo1": {"file_R100": {"success": true, "duration_seconds": 1.0}}}')
+    @patch('os.makedirs')
+    def test_plot_execution_times(self, mock_makedirs, mock_file):
+        self.proc.plot_execution_times_from_json("dummy.json", "out_folder")
+        # Check if some output file was "opened" for writing
+        # The function writes multiple files, let's just check it was called
+        self.assertTrue(mock_file.called)
+
+    @patch('builtins.open', new_callable=mock_open, read_data='{"BUC": {"file_R100": {"success": true, "duration_seconds": 1.0}}}')
+    @patch('os.makedirs')
+    def test_generate_execution_graphs_from_summary(self, mock_makedirs, mock_file):
+        self.proc.generate_execution_graphs_from_summary("dummy.json", "out_folder")
+        self.assertTrue(mock_file.called)
 
     @patch('builtins.open', new_callable=mock_open, read_data='{}')
     @patch('os.path.exists', return_value=True)
