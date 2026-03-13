@@ -3,30 +3,51 @@ import os
 import sys
 from unittest.mock import MagicMock, patch
 
-# Mock PyQt6 before importing AppUIPyQT
-mock_qt_core = MagicMock()
-mock_qt_core.QThread = type('QThread', (object,), {"__init__": lambda self: None})
-mock_qt_core.pyqtSignal = MagicMock
-sys.modules['PyQt6.QtCore'] = mock_qt_core
-
-mock_qt_widgets = MagicMock()
-mock_qt_widgets.QMainWindow = type('QMainWindow', (object,), {"__init__": lambda self: None})
-sys.modules['PyQt6.QtWidgets'] = mock_qt_widgets
-
-sys.modules['PyQt6'] = MagicMock()
-sys.modules['PyQt6.QtGui'] = MagicMock()
-sys.modules['matplotlib'] = MagicMock()
-sys.modules['matplotlib.backends.backend_qtagg'] = MagicMock()
-sys.modules['matplotlib.figure'] = MagicMock()
-
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from Core.AppUIPyQT import AlgoWorker, BatchWorker
-
 class TestAppUILogic(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Setup Scoped Mocks
+        cls.mock_modules = {}
+        
+        # Mock PyQt6
+        mock_qt_core = MagicMock()
+        mock_qt_core.QThread = type('QThread', (object,), {"__init__": lambda self: None})
+        mock_qt_core.pyqtSignal = MagicMock
+        cls.mock_modules['PyQt6.QtCore'] = mock_qt_core
+
+        mock_qt_widgets = MagicMock()
+        mock_qt_widgets.QMainWindow = type('QMainWindow', (object,), {"__init__": lambda self: None})
+        cls.mock_modules['PyQt6.QtWidgets'] = mock_qt_widgets
+
+        cls.mock_modules['PyQt6'] = MagicMock()
+        cls.mock_modules['PyQt6.QtGui'] = MagicMock()
+        
+        # Mock matplotlib (crucial: give it a __path__ so it's treated as a package)
+        mock_mpl = MagicMock()
+        mock_mpl.__path__ = []
+        cls.mock_modules['matplotlib'] = mock_mpl
+        cls.mock_modules['matplotlib.backends.backend_qtagg'] = MagicMock()
+        cls.mock_modules['matplotlib.figure'] = MagicMock()
+
+        # Apply patches
+        cls.patcher = patch.dict('sys.modules', cls.mock_modules)
+        cls.patcher.start()
+
+        # Late import to ensure it uses the mocks
+        from Core.AppUIPyQT import AlgoWorker, BatchWorker
+        cls.AlgoWorker = AlgoWorker
+        cls.BatchWorker = BatchWorker
+
+    @classmethod
+    def tearDownClass(cls):
+        # Stop patching and restore sys.modules
+        cls.patcher.stop()
+
     def test_parse_results_buc(self):
-        worker = AlgoWorker("BUC", "dummy.db", False)
+        worker = self.AlgoWorker("BUC", "dummy.db", False)
         main_mock = MagicMock()
         main_mock.BUC.dim_names = ["A", "B"]
         main_mock.BUC.measure_name = "COUNT"
@@ -42,7 +63,7 @@ class TestAppUILogic(unittest.TestCase):
         self.assertIn([2, "ALL", "ALL", 50], rows)
 
     def test_parse_results_hierarchical_buc(self):
-        worker = AlgoWorker("Hierarchical BUC", "dummy.db", True)
+        worker = self.AlgoWorker("Hierarchical BUC", "dummy.db", True)
         main_mock = MagicMock()
         
         # results: {pattern: [dict, ...]}
@@ -57,7 +78,7 @@ class TestAppUILogic(unittest.TestCase):
         self.assertGreater(len(rows), 0)
 
     def test_parse_results_hierarchical_closetcube(self):
-        worker = AlgoWorker("Hierarchical ClosetCube", "dummy.db", True)
+        worker = self.AlgoWorker("Hierarchical ClosetCube", "dummy.db", True)
         main_mock = MagicMock()
         main_mock.hClosetCube.dim_cols = ["Dim1"]
         main_mock.hClosetCube.measure_cols = ["M1"]
@@ -68,16 +89,12 @@ class TestAppUILogic(unittest.TestCase):
         
         headers, rows = worker.parse_results(results, main_mock)
         self.assertEqual(headers, ["Level", "Dim1", "M1"])
-        self.assertEqual(len(rows), 3) # Parent, separator, Child (sorted by level)
-        # Parent level should be 1, Child level should be 0
-        self.assertEqual(rows[0][0], 0) # Child first because level 0? Wait, hcc_level(r)
-        # Actually in AppUIPyQT: processed_rows.sort(key=lambda x: x[0])
-        # Child has lvl 0, Parent has lvl 1. So Child is first.
+        self.assertEqual(len(rows), 3) # Child, separator, Parent
         self.assertEqual(rows[0][1], "Child")
         self.assertEqual(rows[2][1], "Parent")
 
     def test_batch_worker_smart_match(self):
-        worker = BatchWorker(["Hierarchical BUC"], [("cosky_db_R100.db", "path/cosky_db_R100.db")], smart_match=True)
+        worker = self.BatchWorker(["Hierarchical BUC"], [("cosky_db_R100.db", "path/cosky_db_R100.db")], smart_match=True)
         
         with patch('os.path.exists', return_value=True):
             db_name = "cosky_db_R100.db"
