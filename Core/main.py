@@ -50,6 +50,7 @@ class Main():
                 new_row = tuple(row[i] for i in range(len(allColumns)) if allColumns[i] in dims) + (1.0,)
                 new_data.append(new_row)
             
+            dbGet.close()
             return new_data, dims + [measure_name], dims, measure_name
         else:
             # S'il y a plus de colonnes, on prend la dernière comme mesure
@@ -59,6 +60,8 @@ class Main():
             for row in data:
                 new_row = tuple(row[i] for i in range(len(allColumns)) if allColumns[i] in dims)
                 new_data.append(new_row)
+            
+            dbGet.close()
             return new_data, dims, dim_names, measure_name
 
     def runBUC(self):
