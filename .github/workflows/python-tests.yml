@@ -24,7 +24,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install pytest
-    - name: Test with pytest
+        pip install pytest pytest-cov
+    - name: Test with pytest and coverage
       run: |
-        pytest
+        pytest --cov=Core --cov=scripts --cov-fail-under=70
