@@ -38,11 +38,11 @@ class Converter:
 
     def getMax(self):
         """
-        Gets the maximum value across columns Col_A, Col_B, and Col_C.
+        Gets the global maximum value across columns Col_A, Col_B, and Col_C.
 
-        :return: The maximum value among Col_A, Col_B, and Col_C.
+        :return: The global maximum value among Col_A, Col_B, and Col_C.
         """
-        sqlQuery = "SELECT MAX(Col_A, Col_B, Col_C) FROM " + self.tableName
+        sqlQuery = "SELECT MAX(MAX(Col_A), MAX(Col_B), MAX(Col_C)) FROM " + self.tableName
         self.cursor.execute(sqlQuery)
         max_value = self.cursor.fetchone()[0]
         return max_value
