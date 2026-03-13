@@ -122,6 +122,8 @@ class cubeTikz:
         # S'assurer que c'est une liste de tuples
         if isinstance(self.data, dict):
             data = list(self.data.values())
+        else:
+            data = self.data
 
         # Vérifie si les lignes contiennent une mesure à la fin
         def is_numeric(val):
