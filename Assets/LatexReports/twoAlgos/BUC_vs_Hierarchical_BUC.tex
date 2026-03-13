@@ -1,0 +1,45 @@
+\documentclass[tikz, border=10pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes, positioning}
+\usepackage{xcolor}
+\begin{document}
+\definecolor{skyblue}{RGB}{135,206,235}
+\tikzset{smallskybluenode/.style={circle, fill=skyblue, draw=black, line width=0.5pt, minimum size=4pt, inner sep=0pt}}
+\definecolor{cyan}{RGB}{0,255,255}
+\tikzset{smallcyannode/.style={circle, fill=cyan, draw=black, line width=0.5pt, minimum size=4pt, inner sep=0pt}}
+% Graph for 3 attributes
+\begin{tikzpicture}[line join=bevel]
+\draw[-stealth] (0pt, 0pt) -- (320pt, 0pt) node[anchor=north west, yshift=15pt] {Cardinality};
+\draw[-stealth] (0pt, 0pt) -- (0pt, 300pt) node[anchor=south] {Response time (s)};
+        \foreach \x/\xtext in {
+            0pt/$0$,
+            60pt/$100$,
+            120pt/$200$,
+            180pt/$300$,
+            240pt/$400$,
+            300pt/$500$} {
+            \draw (\x, 2pt) -- (\x, -2pt) node[below] {\xtext\strut};
+        }
+        \foreach \y/\ytext in {
+            0pt/$0$,
+            48pt/$0$,
+            96pt/$0$,
+            144pt/$0$,
+            192pt/$0$,
+            240pt/$1$} {
+            \draw (2pt, \y) -- (-2pt, \y) node[left] {\ytext\strut};
+        }
+        \draw[skyblue, line width=1.5pt] (6pt, 0pt) -- (60pt, 3pt) -- (300pt, 5pt);
+        \filldraw[color=black, fill=skyblue] (6pt, 0pt) circle (2pt);
+        \filldraw[color=black, fill=skyblue] (60pt, 3pt) circle (2pt);
+        \filldraw[color=black, fill=skyblue] (300pt, 5pt) circle (2pt);
+        \draw[cyan, line width=1.5pt] (6pt, 0pt) -- (60pt, 5pt) -- (300pt, 6pt);
+        \filldraw[color=black, fill=cyan] (6pt, 0pt) circle (2pt);
+        \filldraw[color=black, fill=cyan] (60pt, 5pt) circle (2pt);
+        \filldraw[color=black, fill=cyan] (300pt, 6pt) circle (2pt);
+        \matrix [left=0.5cm of current bounding box.north east, anchor=north east] at (current bounding box.north east) {
+            \node [smallskybluenode, label=right:BUC with 3 attributes] {}; \\
+            \node [smallcyannode, label=right:Hierarchical BUC with 3 attributes] {}; \\
+        };
+\end{tikzpicture}
+\end{document}

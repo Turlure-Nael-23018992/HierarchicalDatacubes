@@ -7,16 +7,16 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from scripts.Algorithms.BUC import *
-from scripts.Algorithms.HierarchicalBUC import *
-from scripts.Algorithms.starCubing import *
-from scripts.Algorithms.HierarchicalStarCubing import *
-from scripts.Algorithms.closetCube import *
-from scripts.Algorithms.HierarchicalClosetCube import *
-from scripts.databaseManagement.Converter import *
-from scripts.databaseManagement.dbGetter import *
+from scripts.Algorithms.BUC import BUC
+from scripts.Algorithms.HierarchicalBUC import HierarchicalBUC
+from scripts.Algorithms.starCubing import StarCubing
+from scripts.Algorithms.HierarchicalStarCubing import HierarchicalStarCubing
+from scripts.Algorithms.closetCube import ClosetCube
+from scripts.Algorithms.HierarchicalClosetCube import HierarchicalClosetCube
+from scripts.databaseManagement.Converter import Converter
+from scripts.databaseManagement.dbGetter import dbGetter
 #from scripts.Visualisation.cubeTikZ import *
-from scripts.databaseManagement.DataGenerator import *
+from scripts.databaseManagement.DataGenerator import DataGenerator
 
 
 class Main():
@@ -64,40 +64,46 @@ class Main():
     def runBUC(self):
         # BUC a déjà sa propre logique de chargement mais on peut forcer la cohérence
         self.BUC = BUC(self.fp)
-        self.BUC.run(isPrinted=self.isPrinted)
-        self.time = self.BUC.time
+        results, elapsed = self.BUC.run(isPrinted=self.isPrinted)
+        self.time = elapsed
+        return results
 
     def runHierarchicalBUC(self):
         self.hBUC = HierarchicalBUC()
-        self.hBUC.run_buc_from_simple_hierarchical_db(self.fp,isPrinted=self.isPrinted)
+        results = self.hBUC.run_buc_from_simple_hierarchical_db(self.fp,isPrinted=self.isPrinted)
         self.time = self.hBUC.time
+        return results
 
     def runStarCubing(self):
         data, all_cols, dims, measure = self._prepare_data()
         self.starCubing = StarCubing(data, all_cols)
-        self.starCubing.run(aggregation={measure: "SUM"})
+        results, elapsed = self.starCubing.run(aggregation={measure: "SUM"})
         if self.isPrinted:
             self.starCubing.export_star_tree_like_structure(aggregation={measure: "SUM"})
-        self.time = self.starCubing.time
+        self.time = elapsed
+        return results
 
     def runHierarchicalStarCubing(self):
         self.hStartCubing = HierarchicalStarCubing({}, [], {"COUNT": "SUM"}, {})
-        self.hStartCubing.run_from_db(self.fp, isPrinted=self.isPrinted)
+        results = self.hStartCubing.run_from_db(self.fp, isPrinted=self.isPrinted)
         self.time = self.hStartCubing.time
+        return results
 
     def runClosetCube(self):
         data, all_cols, dims, measure = self._prepare_data()
         self.closetCube = ClosetCube(data, all_cols)
-        res, exec_time = self.closetCube.generate_cube(aggregation={measure: "SUM"})
+        results, exec_time = self.closetCube.generate_cube(aggregation={measure: "SUM"})
         if self.isPrinted:
-            self.closetCube.export_closet_cube_structure(res)
+            self.closetCube.export_closet_cube_structure(results)
         self.time = exec_time
+        return results
 
     def runHierarchicalClosetCube(self):
         data, all_cols, dims, measure = self._prepare_data()
         self.hClosetCube = HierarchicalClosetCube(data, all_cols, skip_first_col=False)
-        self.hClosetCube.generate_closed_cube(verbose=self.isPrinted)
+        results = self.hClosetCube.generate_closed_cube(verbose=self.isPrinted)
         self.time = self.hClosetCube.time
+        return results
 
 def print_menu():
     print("\n" + "="*50)

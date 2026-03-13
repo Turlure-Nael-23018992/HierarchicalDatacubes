@@ -1,0 +1,58 @@
+\documentclass[tikz, border=10pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes, positioning}
+\usepackage{xcolor}
+\begin{document}
+\definecolor{skyblue}{RGB}{135,206,235}
+\tikzset{smallskybluenode/.style={circle, fill=skyblue, draw=black, line width=0.5pt, minimum size=4pt, inner sep=0pt}}
+\definecolor{cyan}{RGB}{0,255,255}
+\tikzset{smallcyannode/.style={circle, fill=cyan, draw=black, line width=0.5pt, minimum size=4pt, inner sep=0pt}}
+\definecolor{brightmaroon}{RGB}{195,33,72}
+\tikzset{smallbrightmaroonnode/.style={circle, fill=brightmaroon, draw=black, line width=0.5pt, minimum size=4pt, inner sep=0pt}}
+% Graph for 3 attributes
+\begin{tikzpicture}[line join=bevel]
+\draw[-stealth] (0pt, 0pt) -- (320pt, 0pt) node[anchor=north west, yshift=15pt] {Cardinality};
+\draw[-stealth] (0pt, 0pt) -- (0pt, 300pt) node[anchor=south] {Response time (s)};
+        \foreach \x/\xtext in {
+            0pt/$0$,
+            60pt/$2 \times 10^{5}$,
+            120pt/$4 \times 10^{5}$,
+            180pt/$6 \times 10^{5}$,
+            240pt/$8 \times 10^{5}$,
+            300pt/$1 \times 10^{6}$} {
+            \draw (\x, 2pt) -- (\x, -2pt) node[below] {\xtext\strut};
+        }
+        \foreach \y/\ytext in {
+            0pt/$0$,
+            48pt/$2$,
+            96pt/$4$,
+            144pt/$6$,
+            192pt/$8$,
+            240pt/$10$} {
+            \draw (2pt, \y) -- (-2pt, \y) node[left] {\ytext\strut};
+        }
+        \draw[skyblue, line width=1.5pt] (0pt, 0pt) -- (0pt, 1pt) -- (0pt, 1pt) -- (15pt, 7pt) -- (300pt, 180pt);
+        \filldraw[color=black, fill=skyblue] (0pt, 0pt) circle (2pt);
+        \filldraw[color=black, fill=skyblue] (0pt, 1pt) circle (2pt);
+        \filldraw[color=black, fill=skyblue] (0pt, 1pt) circle (2pt);
+        \filldraw[color=black, fill=skyblue] (15pt, 7pt) circle (2pt);
+        \filldraw[color=black, fill=skyblue] (300pt, 180pt) circle (2pt);
+        \draw[cyan, line width=1.5pt] (0pt, 0pt) -- (0pt, 1pt) -- (0pt, 1pt) -- (15pt, 10pt) -- (300pt, 238pt);
+        \filldraw[color=black, fill=cyan] (0pt, 0pt) circle (2pt);
+        \filldraw[color=black, fill=cyan] (0pt, 1pt) circle (2pt);
+        \filldraw[color=black, fill=cyan] (0pt, 1pt) circle (2pt);
+        \filldraw[color=black, fill=cyan] (15pt, 10pt) circle (2pt);
+        \filldraw[color=black, fill=cyan] (300pt, 238pt) circle (2pt);
+        \draw[brightmaroon, line width=1.5pt] (0pt, 0pt) -- (0pt, 0pt) -- (0pt, 1pt) -- (15pt, 21pt) -- (300pt, 67pt);
+        \filldraw[color=black, fill=brightmaroon] (0pt, 0pt) circle (2pt);
+        \filldraw[color=black, fill=brightmaroon] (0pt, 0pt) circle (2pt);
+        \filldraw[color=black, fill=brightmaroon] (0pt, 1pt) circle (2pt);
+        \filldraw[color=black, fill=brightmaroon] (15pt, 21pt) circle (2pt);
+        \filldraw[color=black, fill=brightmaroon] (300pt, 67pt) circle (2pt);
+        \matrix [left=0.5cm of current bounding box.north east, anchor=north east] at (current bounding box.north east) {
+            \node [smallskybluenode, label=right:Hierarchical BUC with 3 attributes] {}; \\
+            \node [smallcyannode, label=right:Hierarchical Star-Cubing with 3 attributes] {}; \\
+            \node [smallbrightmaroonnode, label=right:Hierarchical ClosetCube with 3 attributes] {}; \\
+        };
+\end{tikzpicture}
+\end{document}

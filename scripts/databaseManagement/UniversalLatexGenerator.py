@@ -70,9 +70,16 @@ class UniversalLatexGenerator:
 
             if not any(timeDicts): continue
 
-            self.output_path = os.path.join(output_folder, filename)
-            # Use fixed attributes=[3] as default for these auto-generated reports
-            self.generate_latex(timeDicts, [maxCard], [maxTime], algos, attributes=[3])
+            benchmark_folder = os.path.join(output_folder, "Benchmarks")
+            os.makedirs(benchmark_folder, exist_ok=True)
+            self.output_path = os.path.join(benchmark_folder, filename)
+            self.generate_latex(
+                timeDicts,
+                [maxCard],
+                [maxTime],
+                algos,
+                attributes=[3]
+            )
 
     def generate_latex(self, timeDicts, maxRowsList, maxTimeList, algos, attributes=[3],
                        scaleX=300, scaleY=300, scaleType="LinX/LinY"):
