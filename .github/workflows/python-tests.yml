@@ -7,7 +7,7 @@ on:
     branches: [ "main", "master" ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -28,3 +28,16 @@ jobs:
     - name: Test with pytest and coverage
       run: |
         pytest --cov=Core --cov=scripts --cov-fail-under=70
+
+    - name: Generate Coverage Badge
+      if: github.ref == 'refs/heads/main'
+      run: |
+        pip install coverage-badge
+        coverage-badge -o coverage.svg -f
+
+    - name: Commit Coverage Badge
+      if: github.ref == 'refs/heads/main'
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "Auto-update coverage badge"
+        file_pattern: coverage.svg
