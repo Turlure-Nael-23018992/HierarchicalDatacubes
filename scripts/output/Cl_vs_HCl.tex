@@ -1,36 +1,44 @@
-\documentclass{standalone}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
+\documentclass[tikz, border=10pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes, positioning, matrix}
 \usepackage{xcolor}
 \begin{document}
-\begin{tikzpicture}
-\begin{axis}[
-xlabel={Cardinality},
-ylabel={Response time (s)},
-title={Performance of ClosetCube vs Hierarchical ClosetCube},
-title style={yshift=0.7em},
-ymode=linear,
-y coord trafo/.code={ \pgfmathparse{ (max(#1, 1e-09)/2000)^0.43 } \pgfmathresult },
-y coord inv trafo/.code={ \pgfmathparse{ (max(#1, 1e-09)^2.3255813953488373) * 2000 } \pgfmathresult },
-ymin=0, ymax=2000,
-y label style={at={(axis description cs:-0.1,0.5)},anchor=center},
-yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=0},
-ytick={ 0,399,800,1199,1599,2000 },
-minor y tick num=0,
-xmode=log, log basis x=10,
-xtick={ 1000,10000,100000,1000000,5000000,10000000,50000000,100000000 },
-xmax=110000000.00000001,
-xticklabel style={/pgf/number format/sci, /pgf/number format/sci zerofill, /pgf/number format/precision=0},
-x label style={at={(axis description cs:0.5,-0.1)},anchor=north},
-width=14cm, height=12cm,
-grid=major,
-legend style={at={(0.5,-0.2)}, anchor=north, legend columns=-1},
-tick align=outside,
-]
-\addplot[color=blue, mark=*] coordinates {(1000,0.01011) (5000,0.05064) (10000,0.11378) (50000,0.5693) (100000,1.27722) (1000000,6.30766) (2500000,16.74085) (5000000,32.88651) (10000000,65.2882) (25000000,196.59322) (50000000,427.87518)};
-\addlegendentry{ClosetCube}
-\addplot[color=cyan, mark=o] coordinates {(1000,0.44745) (5000,0.694) (10000,0.75251) (50000,1.14008) (100000,1.38765) (1000000,9.33283) (2500000,23.33567) (5000000,44.1406) (10000000,87.47076) (25000000,245.96881) (50000000,595.33614)};
-\addlegendentry{HierarchicalClosetCube}
-\end{axis}
+\definecolor{skyblue}{RGB}{135,206,235}
+\tikzset{smallskybluenode/.style={circle, fill=skyblue, draw=black, line width=0.5pt, minimum size=5pt, inner sep=0pt}}
+\definecolor{brightmaroon}{RGB}{195,33,72}
+\tikzset{smallbrightmaroonnode/.style={circle, fill=brightmaroon, draw=black, line width=0.5pt, minimum size=5pt, inner sep=0pt}}
+\begin{tikzpicture}[line join=bevel]
+\draw[-stealth, line width=1pt] (0pt,0pt) -- (320pt,0pt) node[anchor=north west, yshift=12pt] {Cardinality};
+\draw[-stealth, line width=1pt] (0pt,0pt) -- (0pt,270pt) node[anchor=south] {Response time (s)};
+\foreach \x/\xtext in {
+    0pt/$0$,
+    60pt/$2$,
+    120pt/$11$,
+    180pt/$40$,
+    240pt/$143$,
+    300pt/$499$} {
+    \draw (\x, 2pt) -- (\x, -2pt) node[below, font=\tiny] {\xtext\strut};
+}
+\foreach \y/\ytext in {
+    0pt/$0$,
+    44pt/$40$,
+    88pt/$80$,
+    132pt/$120$,
+    176pt/$160$,
+    221pt/$200$} {
+    \draw (2pt, \y) -- (-2pt, \y) node[left, font=\tiny] {\ytext\strut};
+}
+\draw[skyblue, line width=2pt] (116pt,0pt) -- (223pt,0pt) -- (300pt,0pt);
+\filldraw[color=black, fill=skyblue] (116pt,0pt) circle (2.5pt);
+\filldraw[color=black, fill=skyblue] (223pt,0pt) circle (2.5pt);
+\filldraw[color=black, fill=skyblue] (300pt,0pt) circle (2.5pt);
+\draw[brightmaroon, line width=2pt] (116pt,0pt) -- (223pt,18pt) -- (300pt,174pt);
+\filldraw[color=black, fill=brightmaroon] (116pt,0pt) circle (2.5pt);
+\filldraw[color=black, fill=brightmaroon] (223pt,18pt) circle (2.5pt);
+\filldraw[color=black, fill=brightmaroon] (300pt,174pt) circle (2.5pt);
+\matrix [draw, fill=white, right=0.3cm] at (current bounding box.north east) {
+    \node [smallskybluenode, label=right:\texttt{ClosetCube}] {}; \\
+    \node [smallbrightmaroonnode, label=right:\texttt{HierarchicalClosetCube}] {}; \\
+};
 \end{tikzpicture}
 \end{document}

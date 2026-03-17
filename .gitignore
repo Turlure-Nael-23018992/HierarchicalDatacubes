@@ -1,6 +1,9 @@
 # Ignorer tous les fichiers de base de donnees
 DB/*
 scripts/databaseManagement/dbToTest/*
+scripts/main2.py
+scripts/mainExThese.py
+scripts/databaseManagement/mainDB.py
 
 # Sauf ces fichiers :
 !DB/aurelien_db_C3_R10.db
