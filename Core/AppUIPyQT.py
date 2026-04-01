@@ -79,6 +79,9 @@ class AlgoWorker(QThread):
                     "Hierarchical BUC": main_instance.runHierarchicalBUC,
                     "Hierarchical Star-Cubing": main_instance.runHierarchicalStarCubing,
                     "Hierarchical ClosetCube": main_instance.runHierarchicalClosetCube,
+                    "Hierarchical LevelUpCube": main_instance.runHierarchicalLevelUpCube,
+                    "Hierarchical CompleteCube": main_instance.runHierarchicalCompleteCube,
+                    "OptimizedHierarchicalStarCubing": main_instance.runOptimizedHierarchicalStarCubing,
                 }
                 
                 if self.algo_name in algo_map:
@@ -131,7 +134,7 @@ class AlgoWorker(QThread):
                 for k, v in results.items():
                     level = list(k).count("ALL")
                     rows.append([level] + list(k) + [v])
-            elif self.algo_name in ["Star-Cubing", "ClosetCube"]:
+            elif self.algo_name in ["Star-Cubing", "ClosetCube", "OptimizedHierarchicalStarCubing"]:
                 if results:
                     raw_headers = list(results[0].keys())
                     headers = ["Level"] + raw_headers
@@ -161,8 +164,8 @@ class AlgoWorker(QThread):
                             
                         rows.append([level] + vals)
                         last_anc_count = level
-            elif self.algo_name == "Hierarchical ClosetCube":
-                # HCC results are tuples (d1, d2, d3, m1, m2...)
+            elif self.algo_name in ["Hierarchical ClosetCube", "Hierarchical LevelUpCube"]:
+                # HCC/LevelUp results are tuples (d1, d2, d3, m1, m2...)
                 headers = ["Level"] + main_instance.hClosetCube.dim_cols + main_instance.hClosetCube.measure_cols
                 
                 # To calculate level, we check how many values are NOT in the leaf-level data
@@ -185,6 +188,21 @@ class AlgoWorker(QThread):
                 # Sort by level to match other hierarchical algos and add separators
                 processed_rows.sort(key=lambda x: x[0])
                 
+                last_lvl = -1
+                for row_data in processed_rows:
+                    if last_lvl != -1 and row_data[0] != last_lvl:
+                        rows.append(["=" * 10] * len(headers))
+                    rows.append(row_data)
+                    last_lvl = row_data[0]
+            elif self.algo_name == "Hierarchical CompleteCube":
+                # CompleteCube results: (d1, d2, d3, m1...) where some dim vals may be 'ALL'
+                headers = ["Level"] + main_instance.hCompleteCube.dim_cols + main_instance.hCompleteCube.measure_cols
+                processed_rows = []
+                for r in results:
+                    vals = list(r[:len(main_instance.hCompleteCube.dim_cols)])
+                    lvl = sum(1 for v in vals if str(v).upper() == "ALL")
+                    processed_rows.append([lvl] + list(r))
+                processed_rows.sort(key=lambda x: x[0])
                 last_lvl = -1
                 for row_data in processed_rows:
                     if last_lvl != -1 and row_data[0] != last_lvl:
@@ -254,6 +272,9 @@ class BatchWorker(QThread):
                             "Hierarchical BUC": main_instance.runHierarchicalBUC,
                             "Hierarchical Star-Cubing": main_instance.runHierarchicalStarCubing,
                             "Hierarchical ClosetCube": main_instance.runHierarchicalClosetCube,
+                            "Hierarchical LevelUpCube": main_instance.runHierarchicalLevelUpCube,
+                            "Hierarchical CompleteCube": main_instance.runHierarchicalCompleteCube,
+                            "OptimizedHierarchicalStarCubing": main_instance.runOptimizedHierarchicalStarCubing,
                         }
                         
                         if algo in algo_map:
@@ -351,8 +372,9 @@ class AppUIPyQT(QMainWindow):
         self.algo_combo = QComboBox()
         self.available_algos = [
             "BUC", "Star-Cubing", "ClosetCube",
-            "Hierarchical BUC", "Hierarchical Star-Cubing", 
-            "Hierarchical ClosetCube"
+            "Hierarchical BUC", "Hierarchical Star-Cubing",
+            "Hierarchical ClosetCube", "Hierarchical LevelUpCube",
+            "Hierarchical CompleteCube", "OptimizedHierarchicalStarCubing"
         ]
         self.algo_combo.addItems(self.available_algos)
         self.algo_combo.currentIndexChanged.connect(self.validate_compatibility)

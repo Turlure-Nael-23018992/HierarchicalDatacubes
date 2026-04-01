@@ -12,8 +12,12 @@ from scripts.Algorithms.BUC import *
 from scripts.Algorithms.HierarchicalBUC import *
 from scripts.Algorithms.starCubing import *
 from scripts.Algorithms.HierarchicalStarCubing import *
+from scripts.Algorithms.OptimizedHierarchicalStarCubing import *
+from scripts.utils.hierarchy_loader import *
 from scripts.Algorithms.closetCube import *
 from scripts.Algorithms.HierarchicalClosetCube import *
+from scripts.Algorithms.HierarchicalLevelUpCube import *
+from scripts.Algorithms.HierarchicalCompleteCube import *
 from scripts.databaseManagement.Converter import *
 from scripts.databaseManagement.dbGetter import *
 #from scripts.Visualisation.cubeTikZ import *
@@ -26,11 +30,14 @@ ALGO = {
     "StarCubing": StarCubing,
     "HierarchicalStarCubing": HierarchicalStarCubing,
     "ClosetCube": ClosetCube,
-    "HierarchicalClosetCube": HierarchicalClosetCube
+    "HierarchicalClosetCube": HierarchicalClosetCube,
+    "HierarchicalLevelUpCube": HierarchicalLevelUpCube,
+    "HierarchicalCompleteCube": HierarchicalCompleteCube,
+    "OptimizedHierarchicalStarCubing": OptimizedHierarchicalStarCubing
 }
 
 COLS = [3]
-ROWS = [10, 100, 500, 50000, 1000000 ] #
+ROWS = [10, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000] #
 
 class Benchmark:
     def __init__(self, algo_name, isPrinted=False):
@@ -43,31 +50,35 @@ class Benchmark:
     def run(self):
         for col in COLS:
             for row in ROWS:
-                #DataGenerator().generate_hierarchical_facts_db(row)
-                self.fp = os.path.join(project_root, "DB", f"hierarchie_db_C3_R{row}.db")
+                fp = os.path.join(project_root, "DB", f"hierarchie_db_C3_R{row}.db")
+                if not os.path.exists(fp):
+                    continue
+                
+                main = Main(fp, isPrinted=self.isPrinted)
                 if self.algo == BUC:
-                    main = Main(self.fp, isPrinted=self.isPrinted)
                     main.runBUC()
                 elif self.algo == HierarchicalBUC:
-                    main = Main(self.fp, isPrinted=self.isPrinted)
                     main.runHierarchicalBUC()
                 elif self.algo == StarCubing:
-                    main = Main(self.fp, isPrinted=self.isPrinted)
                     main.runStarCubing()
                 elif self.algo == HierarchicalStarCubing:
-                    main = Main(self.fp, isPrinted=self.isPrinted)
                     main.runHierarchicalStarCubing()
                 elif self.algo == ClosetCube:
-                    main = Main(self.fp, isPrinted=self.isPrinted)
                     main.runClosetCube()
                 elif self.algo == HierarchicalClosetCube:
-                    main = Main(self.fp, isPrinted=self.isPrinted)
                     main.runHierarchicalClosetCube()
+                elif self.algo == HierarchicalLevelUpCube:
+                    main.runHierarchicalLevelUpCube()
+                elif self.algo == HierarchicalCompleteCube:
+                    main.runHierarchicalCompleteCube()
+                elif self.algo == OptimizedHierarchicalStarCubing:
+                    main.runOptimizedHierarchicalStarCubing()
+                
                 self.times[row] = [main.time]
                 print(f"Row {row}: {main.time}s")
-                self.write_times()
+                self.save_single_result(row, main.time)
 
-    def write_times(self):
+    def save_single_result(self, row, time_val):
         os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
         config_path = os.path.join(project_root, "nael-config.json")
@@ -76,29 +87,55 @@ class Benchmark:
             with open(config_path, "r", encoding="utf-8") as f:
                 server_config = json.load(f)
 
-        data = {
-            "time_data": self.times,
-            "max_rows": max(self.times.keys()) if self.times else 0,
-            "max_time": max(t[0] for t in self.times.values()) if self.times else 0,
-            "server_config": server_config
-        }
+        combined_times = {}
+        if os.path.exists(self.output_file):
+            try:
+                with open(self.output_file, "r", encoding="utf-8") as f:
+                    old_data = json.load(f)
+                    combined_times = old_data.get("time_data", old_data)
+                    if not isinstance(combined_times, dict):
+                        combined_times = {}
+            except Exception:
+                pass
 
-        with open(self.output_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
-        print(f"Results written to {self.output_file}")
+        str_row = str(row)
+        new_time = time_val[0] if isinstance(time_val, list) else time_val
+        
+        should_write = False
+        if str_row in combined_times:
+            existing_val = combined_times[str_row]
+            existing_time = existing_val[0] if isinstance(existing_val, list) else existing_val
+            
+            if new_time < existing_time:
+                combined_times[str_row] = [new_time]
+                should_write = True
+                print(f"Updated {str_row} with faster time: {new_time}s")
+        else:
+            combined_times[str_row] = [new_time]
+            should_write = True
+            print(f"Added new result for {str_row}: {new_time}s")
+
+        if should_write:
+            max_rows = max([int(r) for r in combined_times.keys()]) if combined_times else 0
+            max_time = max([t[0] if isinstance(t, list) else t for t in combined_times.values()]) if combined_times else 0
+
+            data = {
+                "time_data": combined_times,
+                "max_rows": max_rows,
+                "max_time": max_time,
+                "server_config": server_config
+            }
+
+            temp_file = self.output_file + ".tmp"
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+            if os.path.exists(self.output_file):
+                os.remove(self.output_file)
+            os.rename(temp_file, self.output_file)
+            print(f"Results persisted to {self.output_file}")
 
 
 if __name__ == "__main__":
     p = False
-    '''benchmark = Benchmark("BUC", isPrinted=p)
-    benchmark.run()
-    benchmark = Benchmark("StarCubing", isPrinted=p)
-    benchmark.run()
-    benchmark = Benchmark("ClosetCube", isPrinted=p)
-    benchmark.run()'''
-    '''benchmark = Benchmark("HierarchicalStarCubing", isPrinted=p)
-    benchmark.run()
-    benchmark = Benchmark("HierarchicalBUC", isPrinted=p)
-    benchmark.run()'''
-    benchmark = Benchmark("HierarchicalClosetCube", isPrinted=p)
+    benchmark = Benchmark("OptimizedHierarchicalStarCubing", isPrinted=p)
     benchmark.run()

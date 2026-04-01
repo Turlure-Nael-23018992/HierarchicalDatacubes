@@ -11,8 +11,12 @@ from scripts.Algorithms.BUC import BUC
 from scripts.Algorithms.HierarchicalBUC import HierarchicalBUC
 from scripts.Algorithms.starCubing import StarCubing
 from scripts.Algorithms.HierarchicalStarCubing import HierarchicalStarCubing
+from scripts.Algorithms.OptimizedHierarchicalStarCubing import OptimizedHierarchicalStarCubing
+from scripts.utils.hierarchy_loader import get_default_hierarchy
 from scripts.Algorithms.closetCube import ClosetCube
 from scripts.Algorithms.HierarchicalClosetCube import HierarchicalClosetCube
+from scripts.Algorithms.HierarchicalLevelUpCube import HierarchicalLevelUpCube
+from scripts.Algorithms.HierarchicalCompleteCube import HierarchicalCompleteCube
 from scripts.databaseManagement.Converter import Converter
 from scripts.databaseManagement.dbGetter import dbGetter
 #from scripts.Visualisation.cubeTikZ import *
@@ -92,6 +96,22 @@ class Main():
         self.time = self.hStartCubing.time
         return results
 
+    def runOptimizedHierarchicalStarCubing(self):
+        data, all_cols, dims, measure = self._prepare_data()
+        hier = get_default_hierarchy()
+        # Filter hierarchies to only include dimensions present in the data
+        relevant_hier = {d: hier[d] for d in dims if d in hier}
+        
+        # Convert data list to dict for compatibility
+        data_dict = {i: row for i, row in enumerate(data)}
+        
+        self.optHStar = OptimizedHierarchicalStarCubing(
+            data_dict, all_cols, {measure: "SUM"}, relevant_hier
+        )
+        results = self.optHStar.run(isPrinted=self.isPrinted)
+        self.time = self.optHStar.time
+        return results
+
     def runClosetCube(self):
         data, all_cols, dims, measure = self._prepare_data()
         self.closetCube = ClosetCube(data, all_cols)
@@ -108,6 +128,20 @@ class Main():
         self.time = self.hClosetCube.time
         return results
 
+    def runHierarchicalLevelUpCube(self):
+        data, all_cols, dims, measure = self._prepare_data()
+        self.hLevelUpCube = HierarchicalLevelUpCube(data, all_cols, skip_first_col=False)
+        results = self.hLevelUpCube.generate_closed_cube(verbose=self.isPrinted)
+        self.time = self.hLevelUpCube.time
+        return results
+
+    def runHierarchicalCompleteCube(self):
+        data, all_cols, dims, measure = self._prepare_data()
+        self.hCompleteCube = HierarchicalCompleteCube(data, all_cols, skip_first_col=False)
+        results = self.hCompleteCube.generate_cube(verbose=self.isPrinted)
+        self.time = self.hCompleteCube.time
+        return results
+
 def print_menu():
     print("\n" + "="*50)
     print("       HIERARCHICAL DATACUBES - MENU")
@@ -117,7 +151,10 @@ def print_menu():
     print("3. ClosetCube (Base Plate)")
     print("4. Hierarchical BUC (Base Hiérarchique)")
     print("5. Hierarchical Star-Cubing (Base Hiérarchique)")
+    print("9. Optimized Hierarchical Star-Cubing (NOUVEAU)")
     print("6. Hierarchical ClosetCube (Base Hiérarchique)")
+    print("7. Hierarchical LevelUpCube (Base Hiérarchique - NOUVEAU)")
+    print("8. Hierarchical CompleteCube (Base Hiérarchique - COMPLET)")
     print("0. Quitter")
     print("-" * 50)
 
@@ -138,13 +175,16 @@ if __name__ == "__main__":
             if choice == '1': main.runBUC()
             elif choice == '2': main.runStarCubing()
             elif choice == '3': main.runClosetCube()
-        elif choice in ['4', '5', '6']:
+        elif choice in ['4', '5', '6', '7', '8', '9']:
             main = Main(db_hier, isPrinted=True)
             if choice == '4': main.runHierarchicalBUC()
             elif choice == '5': main.runHierarchicalStarCubing()
             elif choice == '6': main.runHierarchicalClosetCube()
+            elif choice == '7': main.runHierarchicalLevelUpCube()
+            elif choice == '8': main.runHierarchicalCompleteCube()
+            elif choice == '9': main.runOptimizedHierarchicalStarCubing()
         else:
-            print("Option invalide, veuillez choisir entre 0 et 6.")
+            print("Option invalide, veuillez choisir entre 0 et 9.")
             continue
 
         input("\nAppuyez sur Entrée pour revenir au menu...")

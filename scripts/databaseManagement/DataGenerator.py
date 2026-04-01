@@ -924,4 +924,5 @@ class DataGenerator:
 
 if __name__ == "__main__":
     dg = DataGenerator()
-    dg.generate_hierarchical_facts_db(10)
+    for i in [200, 1000, 2000, 5000]:
+        dg.generate_hierarchical_facts_db(i)
