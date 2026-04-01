@@ -74,9 +74,14 @@ python Core/main.py
 
 ---
 
+## 🙏 Acknowledgments
+
+This project is based on and continues the initial work from [MatteraAurelien/HierarchicalDatacubes-Repo](https://github.com/MatteraAurelien/HierarchicalDatacubes-Repo).
+
 ## 📄 License
 
-This project is part of a research internship on Hierarchical Datacubes.
+This project is distributed under the MIT License - see the [LICENSE](LICENSE) file for more details. 
+It was developed as part of a research internship on Hierarchical Datacubes.
 
 ---
 *Created by Nael - 2026*
