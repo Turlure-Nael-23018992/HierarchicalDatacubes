@@ -41,10 +41,26 @@ Developed as part of a research internship, this tool enables researchers and de
 
 ## ⚙️ Installation
 
-### Prerequisites
-- Python 3.10 or higher.
+### 🚀 Quick Start (Recommended)
 
-### Steps
+To install everything automatically in a virtual environment:
+
+#### 🪟 Windows
+Run the `install.bat` file:
+```bash
+./install.bat
+```
+
+#### 🐧 Linux / 🍎 macOS
+Run the `install.sh` script:
+```bash
+./install.sh
+```
+
+---
+
+### 🛠️ Manual Installation (Advanced)
+
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
@@ -52,24 +68,25 @@ Developed as part of a research internship, this tool enables researchers and de
    ```
 
 2. **Install dependencies**:
-   It is recommended to use a virtual environment. You can install the project and its dependencies using `pip`:
+   It is recommended to use a virtual environment:
    ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    pip install -e .
    ```
-   *Note: This will install all dependencies defined in `pyproject.toml`.*
 
 ## 📋 Usage
 
-To launch the main desktop application:
+After installation, you can launch the tools directly from your terminal (ensure your virtual environment is activated):
 
+### 📊 Desktop Application (PyQt6)
 ```bash
-python Core/AppUIPyQT.py
+datacube-gui
 ```
 
-### Running from CLI
-You can also run the algorithms via the terminal using the `Core/main.py` script:
+### ⌨️ CLI Benchmark Tool
 ```bash
-python Core/main.py
+datacube-cli
 ```
 
 ---

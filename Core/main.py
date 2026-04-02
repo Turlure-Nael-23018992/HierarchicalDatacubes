@@ -158,7 +158,7 @@ def print_menu():
     print("0. Quitter")
     print("-" * 50)
 
-if __name__ == "__main__":
+def main():
     db_flat = os.path.join(project_root, "DB", "cosky_db_C3_R10.db")
     db_hier = os.path.join(project_root, "DB", "hierarchie_db_C3_R10.db")
 
@@ -171,20 +171,22 @@ if __name__ == "__main__":
             break
             
         if choice in ['1', '2', '3']:
-            main = Main(db_flat, isPrinted=True)
-            if choice == '1': main.runBUC()
-            elif choice == '2': main.runStarCubing()
-            elif choice == '3': main.runClosetCube()
+            main_inst = Main(db_flat, isPrinted=True)
+            if choice == '1': main_inst.runBUC()
+            elif choice == '2': main_inst.runStarCubing()
+            elif choice == '3': main_inst.runClosetCube()
         elif choice in ['4', '5', '6', '7', '8', '9']:
-            main = Main(db_hier, isPrinted=True)
-            if choice == '4': main.runHierarchicalBUC()
-            elif choice == '5': main.runHierarchicalStarCubing()
-            elif choice == '6': main.runHierarchicalClosetCube()
-            elif choice == '7': main.runHierarchicalLevelUpCube()
-            elif choice == '8': main.runHierarchicalCompleteCube()
-            elif choice == '9': main.runOptimizedHierarchicalStarCubing()
+            main_inst = Main(db_hier, isPrinted=True)
+            if choice == '4': main_inst.runHierarchicalBUC()
+            elif choice == '5': main_inst.runHierarchicalStarCubing()
+            elif choice == '6': main_inst.runHierarchicalClosetCube()
+            elif choice == '7': main_inst.runHierarchicalLevelUpCube()
+            elif choice == '8': main_inst.runHierarchicalCompleteCube()
+            elif choice == '9': main_inst.runOptimizedHierarchicalStarCubing()
         else:
             print("Option invalide, veuillez choisir entre 0 et 9.")
             continue
 
         input("\nAppuyez sur Entrée pour revenir au menu...")
+if __name__ == "__main__":
+    main()

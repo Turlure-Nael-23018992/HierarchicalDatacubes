@@ -819,8 +819,11 @@ class AppUIPyQT(QMainWindow):
         self.log(f"Error: {error_msg}")
         self.statusBar().showMessage("Error occurred")
 
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
     window = AppUIPyQT()
     window.show()
     sys.exit(app.exec())
+
+if __name__ == "__main__":
+    main()
