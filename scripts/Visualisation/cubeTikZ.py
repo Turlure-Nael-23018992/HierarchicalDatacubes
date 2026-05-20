@@ -7,7 +7,7 @@ class cubeTikz:
     def __init__(self, data):
         self.data = data
 
-    def exportCubeToTikZ(self, colNames, filepath="cube_tikz_output.tex"):
+    def exportCubeToTikZ(self, colNames, filepath="cube_tikz_output.tex", measure_name="SUM(Q)"):
         def is_numeric(val):
             try:
                 int(val)
@@ -44,14 +44,14 @@ class cubeTikz:
         total = sum(measures.values())
 
         table_info = [
-            ("main", full_rows, [colNames[0], colNames[1], colNames[2], "SUM(Q)"], 0, 9),
-            ("tp", rows_01, [colNames[0], colNames[1], "SUM(Q)"], -5, -4),
-            ("te", rows_02, [colNames[0], colNames[2], "SUM(Q)"], -5, 9),
-            ("pe", rows_12, [colNames[1], colNames[2], "SUM(Q)"], -5, 22),
-            ("t", rows_0, [colNames[0], "SUM(Q)"], -10.5, -4),
-            ("p", rows_1, [colNames[1], "SUM(Q)"], -10.5, 9),
-            ("e", rows_2, [colNames[2], "SUM(Q)"], -10.5, 22),
-            ("sum", [[total]], ["SUM(Q)"], -15.5, 9),
+            ("main", full_rows, [colNames[0], colNames[1], colNames[2], measure_name], 0, 9),
+            ("tp", rows_01, [colNames[0], colNames[1], measure_name], -5, -4),
+            ("te", rows_02, [colNames[0], colNames[2], measure_name], -5, 9),
+            ("pe", rows_12, [colNames[1], colNames[2], measure_name], -5, 22),
+            ("t", rows_0, [colNames[0], measure_name], -10.5, -4),
+            ("p", rows_1, [colNames[1], measure_name], -10.5, 9),
+            ("e", rows_2, [colNames[2], measure_name], -10.5, 22),
+            ("sum", [[total]], [measure_name], -15.5, 9),
         ]
 
         arrows = [
@@ -118,7 +118,7 @@ class cubeTikz:
 
         print(f"✅ Fichier TikZ exporté avec succès : {full_path}")
 
-    def generateCube(self):
+    def generateCube(self, measure_name="SUM(Q)"):
         # S'assurer que c'est une liste de tuples
         if isinstance(self.data, dict):
             data = list(self.data.values())
@@ -180,14 +180,14 @@ class cubeTikz:
             return table
 
         # Création des tableaux
-        table_main = create_table(full_rows, ["R", "D", "V", "SUM(Q)"], [0.35, 0.85, 0.3, 0.12])
-        table_type_prop = create_table(rows_type_prop, ["R", "D", "SUM(Q)"], [0.0, 0.6, 0.3, 0.12])
-        table_type_equip = create_table(rows_type_equip, ["R", "V", "SUM(Q)"], [0.35, 0.6, 0.3, 0.12])
-        table_prop_equip = create_table(rows_prop_equip, ["D", "V", "SUM(Q)"], [0.7, 0.6, 0.3, 0.12])
-        table_type = create_table(rows_type, ["R", "SUM(Q)"], [0.0, 0.28, 0.2, 0.12])
-        table_prop = create_table(rows_prop, ["D", "SUM(Q)"], [0.4, 0.28, 0.2, 0.12])
-        table_equip = create_table(rows_equip, ["V", "SUM(Q)"], [0.8, 0.28, 0.2, 0.12])
-        table_sum = create_table([[total_sum]], ["SUM(Q)"], [0.4, 0.05, 0.2, 0.08])
+        table_main = create_table(full_rows, ["R", "D", "V", measure_name], [0.35, 0.85, 0.3, 0.12])
+        table_type_prop = create_table(rows_type_prop, ["R", "D", measure_name], [0.0, 0.6, 0.3, 0.12])
+        table_type_equip = create_table(rows_type_equip, ["R", "V", measure_name], [0.35, 0.6, 0.3, 0.12])
+        table_prop_equip = create_table(rows_prop_equip, ["D", "V", measure_name], [0.7, 0.6, 0.3, 0.12])
+        table_type = create_table(rows_type, ["R", measure_name], [0.0, 0.28, 0.2, 0.12])
+        table_prop = create_table(rows_prop, ["D", measure_name], [0.4, 0.28, 0.2, 0.12])
+        table_equip = create_table(rows_equip, ["V", measure_name], [0.8, 0.28, 0.2, 0.12])
+        table_sum = create_table([[total_sum]], [measure_name], [0.4, 0.05, 0.2, 0.08])
 
         def draw_arrow(ax, start, end):
             ax.annotate("", xy=end, xytext=start,
